@@ -10,5 +10,10 @@ namespace Tweach
         [HideInInspector] public GameObjectReference parentReference;
         public List<GameObjectReference> childReferences;
         public List<ComponentReference> componentReferences;
+        public GameObjectReference(GameObject value)
+        {
+            this.value = value;
+        }
+        public bool expanded;
     }
 }

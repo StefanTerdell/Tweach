@@ -6,5 +6,6 @@ namespace Tweach
     {
         string GetName();
         List<FieldReference> GetFields();
+        IFieldCollection GetParent();
     }
 }

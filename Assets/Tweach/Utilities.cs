@@ -83,12 +83,12 @@ namespace Tweach
             return item != null && item.Count > 0;
         }
 
-        static string Indent(int indentation)
+        public static string Indent(int indentation, int spacing = 4)
         {
-            if (indentation > 10)
-                throw new System.Exception("Recursion > 10, throwing for protection");
+            if (indentation > 100)
+                throw new System.Exception("Recursion > 100, throwing for protection");
 
-            return new string(' ', indentation * 4);
+            return new string(' ', indentation * spacing);
         }
     }
 }

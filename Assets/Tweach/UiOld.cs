@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -6,10 +6,9 @@ using UnityEngine;
 
 namespace Tweach
 {
-    public class Ui
-    {
-        static List<GameObject> instantiatedObjects = new List<GameObject>();
+    public class UiOld {
 
+        static List<GameObject> instantiatedObjects;
         public static void InstantiateUiElements(Reference reference)
         {
             foreach (var instantiatedObject in instantiatedObjects)
@@ -43,7 +42,7 @@ namespace Tweach
 
         static void InstantiateHeader(Reference reference)
         {
-            var headerObject = GameObject.Instantiate(AssetDatabase.LoadAssetAtPath($"{Tweach.baseTweachAssetPath}/UiPrefabs/header.prefab", typeof(GameObject)), Tweach.uiComponentParentTransform) as GameObject;
+            var headerObject = GameObject.Instantiate(AssetDatabase.LoadAssetAtPath($"{TweachComponents.baseTweachAssetPath}/UiPrefabs/header.prefab", typeof(GameObject)), Tweach.uiComponentParentTransform) as GameObject;
 
             instantiatedObjects.Add(headerObject);
 
@@ -108,11 +107,11 @@ namespace Tweach
 
         static void InstantiateAndInitializeUiComponent(int x, int y, Reference reference, Type type)
         {
-            var prefab = AssetDatabase.LoadAssetAtPath($"{Tweach.baseTweachAssetPath}/UiPrefabs/Types/{type.Name}.prefab", typeof(GameObject));
+            var prefab = AssetDatabase.LoadAssetAtPath($"{TweachComponents.baseTweachAssetPath}/UiPrefabs/Types/{type.Name}.prefab", typeof(GameObject));
 
             if (prefab == null)
             {
-                Debug.LogWarning($"{Tweach.baseTweachAssetPath}/UiPrefabs/{type.Name.ToLower()}.prefab");
+                Debug.LogWarning($"{TweachComponents.baseTweachAssetPath}/UiPrefabs/{type.Name.ToLower()}.prefab");
                 return;
             }
 

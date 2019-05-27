@@ -13,7 +13,7 @@ namespace Tweach
                 typeof(GameObject),
                     (Reference reference, UiComponent uiComponent) =>
                         {
-                            uiComponent.action = (v) => Ui.InstantiateUiElements(reference);
+                            uiComponent.action = (v) => UiOld.InstantiateUiElements(reference);
                         }
             },
             {
