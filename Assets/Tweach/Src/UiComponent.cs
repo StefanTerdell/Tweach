@@ -17,23 +17,21 @@ namespace Tweach
             background.color = new Color(background.color.g, 1, background.color.b, background.color.a);
         }
 
-        void InvokeChange(object newValue)
-        {
-            SetChangedColor();
-            action?.Invoke(newValue);
-        }
-
         public void ValueChangeComponentCallback(string newValue)
         {
-            InvokeChange(newValue);
+            action.Invoke(newValue);
         }
         public void ValueChangeComponentCallback(float newValue)
         {
-            InvokeChange(newValue);
+            action.Invoke(newValue);
         }
         public void ValueChangeComponentCallback(int newValue)
         {
-            InvokeChange(newValue);
+            action.Invoke(newValue);
+        }
+        public void ValueChangeComponentCallback(bool newValue)
+        {
+            action.Invoke(newValue);
         }
 
         public void ButtonPressComponentCallback()

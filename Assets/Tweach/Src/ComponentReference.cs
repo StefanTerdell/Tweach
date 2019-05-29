@@ -11,7 +11,13 @@ namespace Tweach
         public List<FieldReference> fieldReferences;
         public List<FieldReference> GetFields() => fieldReferences;
         public string GetName() => value.GetType().Name;
-        public IFieldCollection GetParent() => null;
+        public IFieldCollection GetParentIFieldCollection() => null;
+
+        public INamedChild GetParentWithName()
+        {
+            return gameObjectReference;
+        }
+
         public ComponentReference(Component value, GameObjectReference gameObjectReference)
         {
             this.value = value;

@@ -2,10 +2,9 @@ using System.Collections.Generic;
 
 namespace Tweach
 {
-    public interface IFieldCollection
+    public interface IFieldCollection : INamedChild
     {
-        string GetName();
         List<FieldReference> GetFields();
-        IFieldCollection GetParent();
+        IFieldCollection GetParentIFieldCollection();
     }
 }

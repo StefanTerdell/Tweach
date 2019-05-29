@@ -14,7 +14,13 @@ namespace Tweach
         public List<FieldReference> GetFields() => children;
         public string GetName() => fieldInfo.Name;
         public IFieldCollection parentFieldCollection;
-        public IFieldCollection GetParent() => parentFieldCollection;
+        public IFieldCollection GetParentIFieldCollection() => parentFieldCollection;
+
+        public INamedChild GetParentWithName()
+        {
+            return parentFieldCollection;
+        }
+
         public FieldReference(IFieldCollection parentFieldCollection, object owner, FieldInfo fieldInfo)
         {
             this.parentFieldCollection = parentFieldCollection;

@@ -90,13 +90,13 @@ namespace Tweach
             return false;
         }
 
-        static void GetFields(bool onlyMarkedWithTweachAttribute, IFieldCollection parentFieldCollection, object parent, Dictionary<Component, ComponentReference> componentReferenceDictionary, Dictionary<GameObject, GameObjectReference> gameObjectReferenceDictionary, int depth = 0)
+        static void GetFields(bool onlyMarkedWithTweachAttribute, IFieldCollection parentIFieldCollection, object parentValue, Dictionary<Component, ComponentReference> componentReferenceDictionary, Dictionary<GameObject, GameObjectReference> gameObjectReferenceDictionary, int depth = 0)
         {
             depth++;
             if (depth > 10)
                 throw new System.Exception("Serialization depth limit reached. Recursive reference?");
 
-            var fieldInfos = parent
+            var fieldInfos = parentValue
                 .GetType()
                 .GetFields(Tweach.GetBindingFlags())
                 .Where(f => !f.GetCustomAttributes<HideInInspector>().Any())
@@ -104,12 +104,9 @@ namespace Tweach
 
             foreach (var fieldInfo in fieldInfos)
             {
-                var fieldValue = fieldInfo.GetValue(parent);
+                var fieldValue = fieldInfo.GetValue(parentValue);
 
-                if (fieldValue == null)
-                    continue;
-
-                var fieldReference = new FieldReference(parentFieldCollection, parent, fieldInfo);
+                var fieldReference = new FieldReference(parentIFieldCollection, parentValue, fieldInfo);
 
                 if (fieldValue is Component)
                 {
@@ -121,7 +118,7 @@ namespace Tweach
                     if ((GameObject)fieldValue != null)
                         fieldReference.value = gameObjectReferenceDictionary[(GameObject)fieldValue];
                 }
-                else
+                else if (fieldValue != null)
                 {
                     fieldReference.value = fieldValue;
                     
@@ -133,8 +130,12 @@ namespace Tweach
                         GetFields(onlyMarkedWithTweachAttribute, fieldReference, fieldValue, componentReferenceDictionary, gameObjectReferenceDictionary, depth);
                     }
                 }
+                else
+                {
+                    fieldReference.value = fieldValue;
+                }
 
-                parentFieldCollection.GetFields().Add(fieldReference);
+                parentIFieldCollection.GetFields().Add(fieldReference);
             }
         }
     }

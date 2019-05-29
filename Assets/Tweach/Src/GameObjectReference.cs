@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Tweach
 {
     [System.Serializable]
-    public class GameObjectReference
+    public class GameObjectReference : INamedChild
     {
         public GameObject value;
         [HideInInspector] public GameObjectReference parentReference;
@@ -15,5 +15,15 @@ namespace Tweach
             this.value = value;
         }
         public bool expanded;
+
+        public string GetName()
+        {
+            return value.name;
+        }
+
+        public INamedChild GetParentWithName()
+        {
+            return parentReference;
+        }
     }
 }
