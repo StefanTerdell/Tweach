@@ -55,9 +55,9 @@ namespace Tweach
 
         private void Start()
         {
-            var list = ReferenceMapper.GetRootGameObjectReferences(_onlyMarked, _hideFieldlessObjectsAndComponents);
-            UiInstantiation.FillHierarchy(list);
-            Debug.Log(DebugHelper.GetDebugString(list));
+            gameObjectReferences = ReferenceMapper.GetRootGameObjectReferences(_onlyMarked, _hideFieldlessObjectsAndComponents);
+            UiInstantiation.FillHierarchy(gameObjectReferences);
+            // Debug.Log(DebugHelper.GetDebugString(gameObjectReferences));
         }
 
         public void Exit()

@@ -21,7 +21,7 @@ public class SampleA : MonoBehaviour
 
     [Tweach] public string stringA = "I am a string";
 
-    public SamplASubClass samplASubClass;
+    [Tweach] public SamplASubClass samplASubClass;
 
     private float privateFloatA = 25;
 
