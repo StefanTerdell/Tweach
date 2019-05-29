@@ -1,5 +1,8 @@
-public interface INamedChild
+namespace Tweach
 {
-    string GetName();
-    INamedChild GetParentWithName();
+    public interface INamedChild
+    {
+        string GetName();
+        INamedChild GetParentAsINamedChild();
+    }
 }

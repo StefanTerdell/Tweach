@@ -12,6 +12,12 @@ public class SampleA : MonoBehaviour
 {
     public string StringProperty { get; set; }
     public float floatA = 10, floatB = 20;
+    public Vector2 hedfkljsldkfj;
+    public Vector3 lajsdoiad = new Vector3();
+    public bool IamBool;
+    public bool SoAmI = true;
+
+    public Color color = new Color();
 
     [Tweach] public string stringA = "I am a string";
 

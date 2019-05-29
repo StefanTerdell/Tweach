@@ -3,25 +3,36 @@ using UnityEngine;
 
 namespace Tweach
 {
-    [System.Serializable]
     public class ComponentReference : IFieldCollection
     {
         public Component value;
-        [HideInInspector] public GameObjectReference gameObjectReference;
-        public List<FieldReference> fieldReferences;
-        public List<FieldReference> GetFields() => fieldReferences;
-        public string GetName() => value.GetType().Name;
-        public IFieldCollection GetParentIFieldCollection() => null;
-
-        public INamedChild GetParentWithName()
-        {
-            return gameObjectReference;
-        }
+        public GameObjectReference parentGameObjectReference;
+        public List<FieldReference> childFieldReferences;
 
         public ComponentReference(Component value, GameObjectReference gameObjectReference)
         {
             this.value = value;
-            this.gameObjectReference = gameObjectReference;
+            this.parentGameObjectReference = gameObjectReference;
         }
-    }    
+
+        public List<FieldReference> GetFields()
+        {
+            return childFieldReferences;
+        }
+
+        public string GetName()
+        {
+            return value.GetType().Name;
+        }
+
+        public IFieldCollection GetParentAsIFieldCollection()
+        {
+            return null;
+        }
+
+        public INamedChild GetParentAsINamedChild()
+        {
+            return parentGameObjectReference;
+        }
+    }
 }

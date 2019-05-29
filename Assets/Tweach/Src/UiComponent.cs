@@ -7,8 +7,10 @@ namespace Tweach
     public class UiComponent : MonoBehaviour
     {
         public Image background;
-        public Text label;
+        public Text nameLabel;
+        public Text valueLabel;
         public InputField inputField;
+        public Toggle toggle;
 
         public Action<object> action;
 
@@ -19,21 +21,12 @@ namespace Tweach
 
         public void ValueChangeComponentCallback(string newValue)
         {
-            action.Invoke(newValue);
-        }
-        public void ValueChangeComponentCallback(float newValue)
-        {
-            action.Invoke(newValue);
-        }
-        public void ValueChangeComponentCallback(int newValue)
-        {
-            action.Invoke(newValue);
+            action?.Invoke(newValue);
         }
         public void ValueChangeComponentCallback(bool newValue)
         {
-            action.Invoke(newValue);
+            action?.Invoke(newValue);
         }
-
         public void ButtonPressComponentCallback()
         {
             action?.Invoke(null);

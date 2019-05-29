@@ -167,7 +167,7 @@ GameObject:
   - component: {fileID: 7031306801462588033}
   - component: {fileID: 5471008396033935867}
   m_Layer: 5
-  m_Name: int
+  m_Name: Int
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -244,8 +244,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   background: {fileID: 7031306801462588033}
-  label: {fileID: 2559232811757383506}
+  nameLabel: {fileID: 2559232811757383506}
+  buttonLabel: {fileID: 0}
   inputField: {fileID: 2677309434145308320}
+  toggle: {fileID: 0}
 --- !u!1 &6248682782930300788
 GameObject:
   m_ObjectHideFlags: 0

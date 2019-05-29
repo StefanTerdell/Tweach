@@ -9,24 +9,20 @@ namespace Tweach
 {
     public class UiInstantiation
     {
-        static List<GameObject> instantiatedHierarchyObjects = new List<GameObject>();
-        static List<GameObject> instantiatedComponentsAndFieldsObjects = new List<GameObject>();
+        public static List<GameObject> instantiatedHierarchyObjects = new List<GameObject>();
+        public static List<GameObject> instantiatedComponentsAndFieldsObjects = new List<GameObject>();
 
         public static void FillHierarchy(List<GameObjectReference> gameObjectReferences)
         {
             var hierarchyMemberPrefab = AssetDatabase.LoadAssetAtPath($"{Tweach.baseTweachAssetPath}/UiPrefabs/HierarchyMember.prefab", typeof(GameObject)) as GameObject;
 
             foreach (var instantiatedObject in instantiatedHierarchyObjects)
-            {
                 GameObject.Destroy(instantiatedObject);
-            }
 
             instantiatedHierarchyObjects.Clear();
 
             foreach (var gameObjectReference in gameObjectReferences)
-            {
                 FillHierarchy(gameObjectReferences, gameObjectReference, hierarchyMemberPrefab);
-            }
         }
 
         static void FillHierarchy(List<GameObjectReference> gameObjectReferences, GameObjectReference gameObjectReference, GameObject hierarchyMemberPrefab, int depth = -1)
@@ -37,7 +33,7 @@ namespace Tweach
             instantiatedHierarchyObjects.Add(hierarchyMemberGameObject);
 
             var hierarchyMemberText = hierarchyMemberGameObject.GetComponent<Text>();
-            hierarchyMemberText.text = $"{Utilities.Indent(depth)}{gameObjectReference.value.name}";
+            hierarchyMemberText.text = $" {DebugHelper.Indent(depth)}{gameObjectReference.value.name}";
 
             var hierarchyMemberButton = hierarchyMemberGameObject.GetComponent<Button>();
             hierarchyMemberButton.onClick.AddListener(() =>
@@ -48,27 +44,23 @@ namespace Tweach
             });
 
             if (gameObjectReference.expanded)
-            {
-                foreach (var child in gameObjectReference.childReferences)
-                {
+                foreach (var child in gameObjectReference.childGameObjectReferences)
                     FillHierarchy(gameObjectReferences, child, hierarchyMemberPrefab, depth);
-                }
-            }
         }
 
         static void ClearComponentsAndFieldsContent(INamedChild namedChild)
         {
             foreach (var instantiatedObject in instantiatedComponentsAndFieldsObjects)
-            {
                 GameObject.Destroy(instantiatedObject);
-            }
 
             instantiatedComponentsAndFieldsObjects.Clear();
 
             Tweach.backButton.interactable = false;
 
-            Tweach.pathText.text = GetPathString(namedChild, null);
-
+            if (namedChild != null)
+                Tweach.pathText.text = GetPathString(namedChild, null);
+            else
+                Tweach.pathText.text = "";
         }
 
         static string GetPathString(INamedChild namedChild, string path)
@@ -78,8 +70,8 @@ namespace Tweach
             else
                 path = namedChild.GetName() + " / " + path;
 
-            if (namedChild.GetParentWithName() != null)
-                path = GetPathString(namedChild.GetParentWithName(), path);
+            if (namedChild.GetParentAsINamedChild() != null)
+                path = GetPathString(namedChild.GetParentAsINamedChild(), path);
 
             return path;
         }
@@ -88,20 +80,23 @@ namespace Tweach
         {
             ClearComponentsAndFieldsContent(gameObjectReference);
 
-            Tweach.backButton.interactable = false;
+            Tweach.backButton.interactable = true;
+            Tweach.backButton.onClick.RemoveAllListeners();
+
+            if (gameObjectReference.parentGameObjectReference != null)
+                Tweach.backButton.onClick.AddListener(() => InstantiateComponents(gameObjectReference.parentGameObjectReference));
+            else
+                Tweach.backButton.onClick.AddListener(() => ClearComponentsAndFieldsContent(null));
 
             var classPrefab = AssetDatabase.LoadAssetAtPath($"{Tweach.baseTweachAssetPath}/UiPrefabs/Types/Class.prefab", typeof(GameObject)) as GameObject;
 
-            foreach (var componentReference in gameObjectReference.componentReferences)
+            foreach (var componentReference in gameObjectReference.childComponentReferences)
             {
                 var instantiatedComponentObject = GameObject.Instantiate(classPrefab, Tweach.componentsAndFieldsContentTransform);
                 instantiatedComponentsAndFieldsObjects.Add(instantiatedComponentObject);
 
                 var instantiatedComponentButton = instantiatedComponentObject.GetComponentInChildren<Button>();
-                instantiatedComponentButton.onClick.AddListener(() =>
-                {
-                    InstantiateFieldCollection(componentReference);
-                });
+                instantiatedComponentButton.onClick.AddListener(() => InstantiateFieldCollection(componentReference));
 
                 var instantiatedComponentLabel = instantiatedComponentButton.GetComponentInChildren<Text>();
                 instantiatedComponentLabel.text = componentReference.GetName();
@@ -112,66 +107,49 @@ namespace Tweach
         {
             ClearComponentsAndFieldsContent(fieldCollection);
 
-            if (fieldCollection.GetParentIFieldCollection() != null)
-            {
-                Tweach.backButton.interactable = true;
-                Tweach.backButton.onClick.RemoveAllListeners();
-                Tweach.backButton.onClick.AddListener(() =>
-                {
-                    InstantiateFieldCollection(fieldCollection.GetParentIFieldCollection());
-                });
+            Tweach.backButton.interactable = true;
+            Tweach.backButton.onClick.RemoveAllListeners();
 
-                Debug.Log(fieldCollection.GetName() + " has parent " + fieldCollection.GetParentIFieldCollection().GetName());
-            }
+            if (fieldCollection is ComponentReference)
+                Tweach.backButton.onClick.AddListener(() => InstantiateComponents((fieldCollection as ComponentReference).parentGameObjectReference));
             else
-            {
-                Debug.Log(fieldCollection.GetName() + " has no parent");
-            }
+                Tweach.backButton.onClick.AddListener(() => InstantiateFieldCollection((fieldCollection as FieldReference).parentIFieldCollection));
 
             foreach (var fieldReference in fieldCollection.GetFields())
             {
-                if (fieldReference.children != null && fieldReference.children.Count > 0)
+                if (UiInitialization.Registry.ContainsKey(fieldReference.fieldInfo.FieldType))
                 {
-                    var classPrefab = AssetDatabase.LoadAssetAtPath($"{Tweach.baseTweachAssetPath}/UiPrefabs/Types/Class.prefab", typeof(GameObject)) as GameObject;
-
-                    var instantiatedComponentObject = GameObject.Instantiate(classPrefab, Tweach.componentsAndFieldsContentTransform);
-                    instantiatedComponentsAndFieldsObjects.Add(instantiatedComponentObject);
-
-                    var instantiatedComponentButton = instantiatedComponentObject.GetComponentInChildren<Button>();
-                    instantiatedComponentButton.onClick.AddListener(() =>
-                    {
-                        InstantiateFieldCollection(fieldReference);
-                    });
-
-                    var instantiatedComponentLabel = instantiatedComponentButton.GetComponentInChildren<Text>();
-                    instantiatedComponentLabel.text = fieldReference.fieldInfo.Name;
+                    var uiComponent = InstantiateUiComponent(UiInitialization.Registry[fieldReference.fieldInfo.FieldType].prefabName);
+                    uiComponent.nameLabel.text = fieldReference.fieldInfo.Name;
+                    UiInitialization.Registry[fieldReference.fieldInfo.FieldType].init.Invoke(fieldReference, uiComponent);
                 }
-                else if (Types.Registry.ContainsKey(fieldReference.fieldInfo.FieldType)) 
+                else if (fieldReference.childFieldReferences != null && fieldReference.childFieldReferences.Count > 0)
                 {
-                    var tweachType = Types.Registry[fieldReference.fieldInfo.FieldType];
-
-                    var classPrefab = AssetDatabase.LoadAssetAtPath($"{Tweach.baseTweachAssetPath}/UiPrefabs/Types/{tweachType.prefabName}.prefab", typeof(GameObject)) as GameObject;
-
-                    var instantiatedObject = GameObject.Instantiate(classPrefab, Tweach.componentsAndFieldsContentTransform);
-                    instantiatedComponentsAndFieldsObjects.Add(instantiatedObject);
-
-                    var uiComponent = instantiatedObject.GetComponent<UiComponent>();
-                    uiComponent.label.text = fieldReference.GetName();
-                    tweachType.init.Invoke(fieldReference, uiComponent);
+                    var uiComponent = InstantiateUiComponent("Class");
+                    uiComponent.nameLabel.text = "BÖG";//fieldReference.fieldInfo.Name;
+                    uiComponent.valueLabel.text = fieldReference.fieldInfo.FieldType.Name;
+                    uiComponent.action = (v) => InstantiateFieldCollection(fieldReference);
                 }
                 else
                 {
-                    var classPrefab = AssetDatabase.LoadAssetAtPath($"{Tweach.baseTweachAssetPath}/UiPrefabs/Types/Class.prefab", typeof(GameObject)) as GameObject;
-
-                    var instantiatedComponentObject = GameObject.Instantiate(classPrefab, Tweach.componentsAndFieldsContentTransform);
-                    instantiatedComponentsAndFieldsObjects.Add(instantiatedComponentObject);
-
-                    var instantiatedComponentButton = instantiatedComponentObject.GetComponentInChildren<Button>();
-
-                    var instantiatedComponentLabel = instantiatedComponentButton.GetComponentInChildren<Text>();
-                    instantiatedComponentLabel.text = fieldReference.fieldInfo.Name;
+                    var uiComponent = InstantiateUiComponent("Unknown");
+                    uiComponent.nameLabel.text = fieldReference.fieldInfo.Name;
+                    uiComponent.valueLabel.text = fieldReference.fieldInfo.FieldType.Name;
                 }
             }
+        }
+
+        static UiComponent InstantiateUiComponent(string prefabName)
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath($"{Tweach.baseTweachAssetPath}/UiPrefabs/Types/{prefabName}.prefab", typeof(GameObject)) as GameObject;
+
+            var instantiatedObject = GameObject.Instantiate(prefab, Tweach.componentsAndFieldsContentTransform);
+            
+            instantiatedComponentsAndFieldsObjects.Add(instantiatedObject);
+
+            var uiComponent = instantiatedObject.GetComponent<UiComponent>();
+
+            return uiComponent;
         }
     }
 }

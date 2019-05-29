@@ -3,9 +3,9 @@ using System.Text;
 
 namespace Tweach
 {
-    public static class Utilities
+    public static class DebugHelper
     {
-        public static string DebugString(List<GameObjectReference> rootList)
+        public static string GetDebugString(List<GameObjectReference> rootList)
         {
             var debugString = "<b><i>Tweach!</i></b> \n";
 
@@ -21,19 +21,19 @@ namespace Tweach
         {
             var debugString = $"{Indent(i)}{gameObjectReference.value.name}:\n";
 
-            if (gameObjectReference.childReferences.Any())
+            if (gameObjectReference.childGameObjectReferences.Any())
             {
                 debugString += $"{Indent(i + 1)}Child Objects:\n";
-                foreach (var item in gameObjectReference.childReferences)
+                foreach (var item in gameObjectReference.childGameObjectReferences)
                 {
                     debugString += GetGameObjectDebugString(item, i + 2);
                 }
             }
 
-            if (gameObjectReference.componentReferences.Any())
+            if (gameObjectReference.childComponentReferences.Any())
             {
                 debugString += $"{Indent(i + 1)}Components:\n";
-                foreach (var item in gameObjectReference.componentReferences)
+                foreach (var item in gameObjectReference.childComponentReferences)
                 {
                     debugString += GetComponentDebugString(item, i + 2);
                 }
@@ -46,7 +46,7 @@ namespace Tweach
         {
             var debugString = $"{Indent(i)}{componentReference.value.GetType().Name}\n";
 
-            foreach (var item in componentReference.fieldReferences)
+            foreach (var item in componentReference.childFieldReferences)
             {
                 debugString += GetFieldDebugString(item, i + 1);
             }
@@ -59,10 +59,10 @@ namespace Tweach
             i++;
             var debugString = $"{Indent(i)}{fieldReference.fieldInfo.FieldType.Name} {fieldReference.fieldInfo.Name}:";
 
-            if (fieldReference.children.Any())
+            if (fieldReference.childFieldReferences.Any())
             {
                 debugString += "\n";
-                foreach (var item in fieldReference.children)
+                foreach (var item in fieldReference.childFieldReferences)
                 {
                     debugString += GetFieldDebugString(item, i + 1);
                 }

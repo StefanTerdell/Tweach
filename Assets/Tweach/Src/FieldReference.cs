@@ -4,28 +4,47 @@ using UnityEngine;
 
 namespace Tweach
 {
-    [System.Serializable]
     public class FieldReference : IFieldCollection
     {
         public object value;
-        [HideInInspector] public object owner;
+        public object parentValue;
         public FieldInfo fieldInfo;
-        public List<FieldReference> children;
-        public List<FieldReference> GetFields() => children;
-        public string GetName() => fieldInfo.Name;
-        public IFieldCollection parentFieldCollection;
-        public IFieldCollection GetParentIFieldCollection() => parentFieldCollection;
-
-        public INamedChild GetParentWithName()
-        {
-            return parentFieldCollection;
-        }
+        public List<FieldReference> childFieldReferences;
+        public FieldReference parentFieldReference;
+        public IFieldCollection parentIFieldCollection;
 
         public FieldReference(IFieldCollection parentFieldCollection, object owner, FieldInfo fieldInfo)
         {
-            this.parentFieldCollection = parentFieldCollection;
-            this.owner = owner;
+            if (parentFieldCollection is FieldReference)
+                parentFieldReference = parentFieldCollection as FieldReference;
+
+            this.parentIFieldCollection = parentFieldCollection;
+            this.parentValue = owner;
             this.fieldInfo = fieldInfo;
+        }
+
+        public void PushValue(object newValue)
+        {
+            fieldInfo.SetValue(parentValue, newValue);
+            value = fieldInfo.GetValue(parentValue);
+
+            if (parentValue.GetType().IsValueType)
+                parentFieldReference.fieldInfo.SetValue(parentFieldReference.parentValue, parentValue);
+        }
+
+        public List<FieldReference> GetFields()
+        {
+            return childFieldReferences;
+        }
+
+        public string GetName()
+        {
+            return fieldInfo.Name;
+        }
+
+        public INamedChild GetParentAsINamedChild()
+        {
+            return parentIFieldCollection;
         }
     }
 }

@@ -42,14 +42,14 @@ namespace Tweach
         {
             if (instance != null)
             {
-                Debug.LogWarning("Multiple Tweach instances found! Destroying this one");
+                UnityEngine.Debug.LogWarning("Multiple Tweach instances found! Destroying this one");
                 Destroy(this.gameObject);
                 return;
             }
 
             baseTweachAssetPath = AssetDatabase.GetAssetPath(MonoScript.FromMonoBehaviour(this));
             baseTweachAssetPath = baseTweachAssetPath.Substring(0, baseTweachAssetPath.LastIndexOf('/'));
-            
+
             instance = this;
         }
 
@@ -57,7 +57,7 @@ namespace Tweach
         {
             var list = ReferenceMapper.GetRootGameObjectReferences(_onlyMarked, _hideFieldlessObjectsAndComponents);
             UiInstantiation.FillHierarchy(list);
-            // Debug.Log(Utilities.DebugString(list));
+            Debug.Log(DebugHelper.GetDebugString(list));
         }
 
         public void Exit()
@@ -69,6 +69,8 @@ namespace Tweach
         {
             //This helps the garbage collector clear out the static instance of the reference map that we no longer need
             gameObjectReferences = null;
+            UiInstantiation.instantiatedComponentsAndFieldsObjects.Clear();
+            UiInstantiation.instantiatedHierarchyObjects.Clear();
         }
 
         public static BindingFlags GetBindingFlags()

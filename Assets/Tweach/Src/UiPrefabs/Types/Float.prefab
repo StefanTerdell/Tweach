@@ -325,7 +325,7 @@ GameObject:
   - component: {fileID: 6033681794811505786}
   - component: {fileID: 8773897120383260416}
   m_Layer: 5
-  m_Name: single
+  m_Name: Float
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -402,5 +402,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   background: {fileID: 6033681794811505786}
-  label: {fileID: 1273376823784157609}
+  nameLabel: {fileID: 1273376823784157609}
+  buttonLabel: {fileID: 0}
   inputField: {fileID: 1659716553723371611}
+  toggle: {fileID: 0}

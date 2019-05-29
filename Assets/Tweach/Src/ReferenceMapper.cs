@@ -11,7 +11,7 @@ namespace Tweach
         public static List<GameObjectReference> GetRootGameObjectReferences(bool onlyMarkedWithTweachAttribute, bool hideFieldlessObjectsAndComponents)
         {
             var transforms = new List<Transform>();
-            
+
             foreach (var g in SceneManager.GetActiveScene().GetRootGameObjects())
             {
                 transforms.AddRange(g.GetComponentsInChildren<Transform>());
@@ -27,9 +27,9 @@ namespace Tweach
             foreach (var t in transforms)
             {
                 if (t.parent != null)
-                    gameObjectReferenceDictionary[t.gameObject].parentReference = gameObjectReferenceDictionary[t.parent.gameObject];
-                
-                gameObjectReferenceDictionary[t.gameObject].childReferences = t.GetComponentsInChildren<Transform>()
+                    gameObjectReferenceDictionary[t.gameObject].parentGameObjectReference = gameObjectReferenceDictionary[t.parent.gameObject];
+
+                gameObjectReferenceDictionary[t.gameObject].childGameObjectReferences = t.GetComponentsInChildren<Transform>()
                     .Where(ct => ct.parent == t)
                     .Select(ct => gameObjectReferenceDictionary[ct.gameObject])
                     .ToList();
@@ -39,11 +39,11 @@ namespace Tweach
 
             foreach (var gameObjectReference in gameObjectReferenceDictionary.Values)
             {
-                gameObjectReference.componentReferences = gameObjectReference.value.GetComponents<Component>()
+                gameObjectReference.childComponentReferences = gameObjectReference.value.GetComponents<Component>()
                     .Select(c => new ComponentReference(c, gameObjectReferenceDictionary[c.gameObject]))
                     .ToList();
 
-                foreach (var componentReference in gameObjectReference.componentReferences)
+                foreach (var componentReference in gameObjectReference.childComponentReferences)
                 {
                     componentReferenceDictionary.Add(componentReference.value, componentReference);
                 }
@@ -51,41 +51,40 @@ namespace Tweach
 
             foreach (var componentReference in componentReferenceDictionary.Values)
             {
-                if (componentReference.fieldReferences == null)
-                    componentReference.fieldReferences = new List<FieldReference>();
+                if (componentReference.childFieldReferences == null)
+                    componentReference.childFieldReferences = new List<FieldReference>();
 
                 GetFields(onlyMarkedWithTweachAttribute, componentReference, componentReference.value, componentReferenceDictionary, gameObjectReferenceDictionary);
             }
 
-            var rootGameObjectReferences = gameObjectReferenceDictionary.Values.Where(g => g.parentReference == null).ToList();
+            var rootGameObjectReferences = gameObjectReferenceDictionary.Values.Where(g => g.parentGameObjectReference == null).ToList();
 
-            return hideFieldlessObjectsAndComponents 
+            return hideFieldlessObjectsAndComponents
                 ? rootGameObjectReferences.Where(gameObjectReference => HasFieldsRecursive(gameObjectReference, true)).ToList()
                 : rootGameObjectReferences;
         }
 
-        static bool HasFieldsRecursive(GameObjectReference item, bool removeComponentsWithoutFields)
+        static bool HasFieldsRecursive(GameObjectReference gameObjectReference, bool removeComponentsWithoutFields)
         {
-            var count = item.componentReferences.Count;
+            var count = gameObjectReference.childComponentReferences.Count;
+
             for (int i = 0; i < count; i++)
             {
-                if (item.componentReferences[i].fieldReferences.Count > 0)
+                if (gameObjectReference.childComponentReferences[i].childFieldReferences.Count > 0)
                 {
                     return true;
                 }
                 else if (removeComponentsWithoutFields)
                 {
-                    item.componentReferences.RemoveAt(i);
+                    gameObjectReference.childComponentReferences.RemoveAt(i);
                     i--;
                     count--;
                 }
             }
 
-            foreach (var gameObjectReferenceChild in item.childReferences)
-            {
+            foreach (var gameObjectReferenceChild in gameObjectReference.childGameObjectReferences)
                 if (HasFieldsRecursive(gameObjectReferenceChild, removeComponentsWithoutFields))
                     return true;
-            }
 
             return false;
         }
@@ -108,31 +107,25 @@ namespace Tweach
 
                 var fieldReference = new FieldReference(parentIFieldCollection, parentValue, fieldInfo);
 
-                if (fieldValue is Component)
+                if (fieldValue is Component && (Component)fieldValue != null)
                 {
-                    if ((Component)fieldValue != null)
-                        fieldReference.value = componentReferenceDictionary[(Component)fieldValue];
+                    fieldReference.value = componentReferenceDictionary[(Component)fieldValue];
                 }
-                else if (fieldValue is GameObject)
+                else if (fieldValue is GameObject && (GameObject)fieldValue != null)
                 {
-                    if ((GameObject)fieldValue != null)
-                        fieldReference.value = gameObjectReferenceDictionary[(GameObject)fieldValue];
-                }
-                else if (fieldValue != null)
-                {
-                    fieldReference.value = fieldValue;
-                    
-                    if (!fieldInfo.FieldType.IsPrimitive && fieldInfo.FieldType != typeof(string))
-                    {
-                        if (fieldReference.children == null)
-                            fieldReference.children = new List<FieldReference>();
-
-                        GetFields(onlyMarkedWithTweachAttribute, fieldReference, fieldValue, componentReferenceDictionary, gameObjectReferenceDictionary, depth);
-                    }
+                    fieldReference.value = gameObjectReferenceDictionary[(GameObject)fieldValue];
                 }
                 else
                 {
                     fieldReference.value = fieldValue;
+
+                    if (fieldValue != null && !fieldInfo.FieldType.IsPrimitive && fieldInfo.FieldType != typeof(string))
+                    {
+                        if (fieldReference.childFieldReferences == null)
+                            fieldReference.childFieldReferences = new List<FieldReference>();
+
+                        GetFields(onlyMarkedWithTweachAttribute, fieldReference, fieldValue, componentReferenceDictionary, gameObjectReferenceDictionary, depth);
+                    }
                 }
 
                 parentIFieldCollection.GetFields().Add(fieldReference);

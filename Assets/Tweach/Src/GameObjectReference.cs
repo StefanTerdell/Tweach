@@ -3,27 +3,27 @@ using UnityEngine;
 
 namespace Tweach
 {
-    [System.Serializable]
     public class GameObjectReference : INamedChild
     {
+        public bool expanded;
         public GameObject value;
-        [HideInInspector] public GameObjectReference parentReference;
-        public List<GameObjectReference> childReferences;
-        public List<ComponentReference> componentReferences;
+        public GameObjectReference parentGameObjectReference;
+        public List<GameObjectReference> childGameObjectReferences;
+        public List<ComponentReference> childComponentReferences;
+        
         public GameObjectReference(GameObject value)
         {
             this.value = value;
         }
-        public bool expanded;
 
         public string GetName()
         {
             return value.name;
         }
 
-        public INamedChild GetParentWithName()
+        public INamedChild GetParentAsINamedChild()
         {
-            return parentReference;
+            return parentGameObjectReference;
         }
     }
 }
