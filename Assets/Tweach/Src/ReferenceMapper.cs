@@ -8,7 +8,10 @@ namespace Tweach
 {
     public static class ReferenceMapper
     {
-        public static List<GameObjectReference> GetRootGameObjectReferences(bool onlyMarkedWithTweachAttribute, bool hideFieldlessObjectsAndComponents)
+        static Dictionary<Component, ComponentReference> componentReferenceDictionary;
+        static Dictionary<GameObject, GameObjectReference> gameObjectReferenceDictionary;
+
+        public static List<GameObjectReference> GetRootGameObjectReferences()
         {
             var transforms = new List<Transform>();
 
@@ -17,7 +20,7 @@ namespace Tweach
                 transforms.AddRange(g.GetComponentsInChildren<Transform>()); //This may need work. Seems to cap at 200 objects
             }
 
-            var gameObjectReferenceDictionary = new Dictionary<GameObject, GameObjectReference>();
+            gameObjectReferenceDictionary = new Dictionary<GameObject, GameObjectReference>();
 
             foreach (var t in transforms)
             {
@@ -35,7 +38,7 @@ namespace Tweach
                     .ToList();
             }
 
-            var componentReferenceDictionary = new Dictionary<Component, ComponentReference>();
+            componentReferenceDictionary = new Dictionary<Component, ComponentReference>();
 
             foreach (var gameObjectReference in gameObjectReferenceDictionary.Values)
             {
@@ -48,17 +51,24 @@ namespace Tweach
                     componentReferenceDictionary.Add(componentReference.value, componentReference);
                 }
 
-                MapMembers(onlyMarkedWithTweachAttribute, gameObjectReference, componentReferenceDictionary, gameObjectReferenceDictionary);
+                MapMembers(gameObjectReference);
+
+                Tweach.mappedGameObjectCount++;
             }
 
             foreach (var componentReference in componentReferenceDictionary.Values)
             {
-                MapMembers(onlyMarkedWithTweachAttribute, componentReference, componentReferenceDictionary, gameObjectReferenceDictionary);
+                MapMembers(componentReference);
+
+                Tweach.mappedComponentCount++;
             }
 
             var rootGameObjectReferences = gameObjectReferenceDictionary.Values.Where(g => g.parentGameObjectReference == null).ToList();
 
-            return hideFieldlessObjectsAndComponents
+            componentReferenceDictionary = null;
+            gameObjectReferenceDictionary = null;
+
+            return Tweach.hideMemberlessObjectsAndComponents
                 ? rootGameObjectReferences.Where(gameObjectReference => HasMembersRecursive(gameObjectReference, true)).ToList()
                 : rootGameObjectReferences;
         }
@@ -92,21 +102,30 @@ namespace Tweach
         {
             try
             {
-                if (memberInfo is FieldInfo)
-                    value = (memberInfo as FieldInfo).GetValue(parentValue);
-                else
-                    value = (memberInfo as PropertyInfo).GetValue(parentValue);
-
+                value = GetMemberValue(memberInfo, parentValue);
                 return true;
             }
             catch
             {
+                // Debug.LogWarning($"Failed getting member {memberInfo.Name} from {parentValue}");
+                Tweach.mappedMemberCount--;
+                Tweach.failedMemberCount++;
                 value = null;
                 return false;
             }
         }
 
-        static void MapMembers(bool onlyMarkedWithTweachAttribute, IReference parentReference, Dictionary<Component, ComponentReference> componentReferenceDictionary, Dictionary<GameObject, GameObjectReference> gameObjectReferenceDictionary, int depth = 0)
+        static object GetMemberValue(MemberInfo memberInfo, object parentValue)
+        {
+            Tweach.mappedMemberCount++;
+
+            if (memberInfo is FieldInfo)
+                return (memberInfo as FieldInfo).GetValue(parentValue);
+            else
+                return (memberInfo as PropertyInfo).GetValue(parentValue);
+        }
+
+        static void MapMembers(IReference parentReference, int depth = 0)
         {
             depth++;
             if (depth > 20)
@@ -118,24 +137,37 @@ namespace Tweach
                 memberInfos.AddRange(parentReference.GetValue()
                     .GetType()
                     .GetFields(Tweach.GetBindingFlags())
-                    .Where(f => !f.GetCustomAttributes<HideInInspector>().Any())
-                    .Where(f => !onlyMarkedWithTweachAttribute || f.GetCustomAttributes<TweachAttribute>().Any())
+                    .Where(f => 
+                    {
+                        var att = f.GetCustomAttributes();
+                        return !Tweach.respectHideInInspector || !att.Any(a => a.GetType() == typeof(HideInInspector))
+                            && !Tweach.mapOnlyMembersMarkedWithTweach || att.Any(a => a.GetType() == typeof(TweachAttribute));
+                    })
                     .Select(f => f as MemberInfo));
 
             if (Tweach.mapProperties)
                 memberInfos.AddRange(parentReference.GetValue()
                     .GetType()
                     .GetProperties(Tweach.GetBindingFlags())
-                    .Where(p => p.GetAccessors().Any(a => a.Name == $"get_{p.Name}")
-                             && p.GetAccessors().Any(a => a.Name == $"set_{p.Name}"))
-                    .Where(p => !p.GetCustomAttributes<HideInInspector>().Any())
-                    .Where(p => !onlyMarkedWithTweachAttribute || p.GetCustomAttributes<TweachAttribute>().Any())
+                    .Where(p =>
+                    {
+                        var acc = p.GetAccessors();
+                        var att = p.GetCustomAttributes();
+                        return acc.Any(a => a.Name == $"get_{p.Name}")
+                            && acc.Any(a => a.Name == $"set_{p.Name}")
+                            && !Tweach.respectHideInInspector || !att.Any(a => a.GetType() == typeof(HideInInspector))
+                            && !Tweach.mapOnlyMembersMarkedWithTweach || att.Any(a => a.GetType() == typeof(TweachAttribute));
+                    })
                     .Select(p => p as MemberInfo));
 
             foreach (var memberInfo in memberInfos)
             {
-                if (!TryGetMemberValue(memberInfo, parentReference.GetValue(), out var memberValue))
-                    return;
+                object memberValue;
+
+                if (Tweach.perilousMode)
+                    memberValue = GetMemberValue(memberInfo, parentReference.GetValue());
+                else if (!TryGetMemberValue(memberInfo, parentReference.GetValue(), out memberValue))
+                    continue;
 
                 var memberReference = new MemberReference(parentReference, memberInfo);
 
@@ -153,11 +185,11 @@ namespace Tweach
 
                     if (memberValue != null && !memberReference.GetMemberType().IsPrimitive && memberReference.GetMemberType() != typeof(string))
                     {
-                        MapMembers(onlyMarkedWithTweachAttribute, memberReference, componentReferenceDictionary, gameObjectReferenceDictionary, depth);
+                        MapMembers(memberReference, depth);
                     }
                 }
 
-                parentReference.GetMembers().Add(memberReference);
+                parentReference.AddMember(memberReference);
             }
         }
     }

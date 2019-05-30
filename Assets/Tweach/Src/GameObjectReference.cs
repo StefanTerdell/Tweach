@@ -12,11 +12,18 @@ namespace Tweach
         public List<GameObjectReference> childGameObjectReferences;
         public List<ComponentReference> childComponentReferences;
         public List<MemberReference> childMemberReferences;
-        
+
         public GameObjectReference(GameObject value)
         {
-            childMemberReferences = new List<MemberReference>();
             this.value = value;
+        }
+
+        public void AddMember(MemberReference memberReference)
+        {
+            if (childMemberReferences == null)
+                childMemberReferences = new List<MemberReference>();
+
+            childMemberReferences.Add(memberReference);
         }
 
         public string GetName() => value.name;

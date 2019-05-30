@@ -16,8 +16,6 @@ namespace Tweach
 
         public MemberReference(IReference parentFieldCollection, MemberInfo memberInfo)
         {
-            childMemberReferences = new List<MemberReference>();
-
             this.parentIReference = parentFieldCollection;
             this.parentValue = parentFieldCollection.GetValue();
             this.memberInfo = memberInfo;
@@ -35,12 +33,21 @@ namespace Tweach
             else if (memberInfo is PropertyInfo)
             {
                 var propertyInfo = memberInfo as PropertyInfo;
+                
                 propertyInfo.SetValue(parentValue, newValue);
                 value = propertyInfo.GetValue(parentValue);
             }
 
-            if (parentValue.GetType().IsValueType && parentIReference is MemberReference)
+            if (parentValue.GetType().IsValueType)
                 (parentIReference as MemberReference).PushValue(parentValue);
+        }
+
+        public void AddMember(MemberReference memberReference)
+        {
+            if (childMemberReferences == null)
+                childMemberReferences = new List<MemberReference>();
+
+            childMemberReferences.Add(memberReference);
         }
 
         public Type GetMemberType()
@@ -48,6 +55,7 @@ namespace Tweach
             //Not getting value.GetType here as it can be set as a GameObjectReference, while the memberinfo will always reflect the member itself
             return memberInfo is FieldInfo ? (memberInfo as FieldInfo).FieldType : (memberInfo as PropertyInfo).PropertyType;
         }
+
         public List<MemberReference> GetMembers() => childMemberReferences;
         public string GetName() => memberInfo.Name;
         public string GetTypeName() => GetMemberType().Name;

@@ -9,5 +9,6 @@ namespace Tweach
         IReference GetParentReference();
         List<MemberReference> GetMembers();
         object GetValue();
+        void AddMember(MemberReference nemberReference);
     }
 }
