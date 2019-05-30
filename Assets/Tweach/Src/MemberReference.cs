@@ -6,21 +6,20 @@ using UnityEngine;
 
 namespace Tweach
 {
-    public class MemberReference : IMemberCollection
+    public class MemberReference : IReference
     {
         public object value;
         public object parentValue;
         public MemberInfo memberInfo;
         public List<MemberReference> childMemberReferences;
-        public MemberReference parentMemberReference; //To propagate change in value types upwards
-        public IMemberCollection parentIMemberCollection;
-        public MemberReference(IMemberCollection parentFieldCollection, object owner, MemberInfo memberInfo)
-        {
-            if (parentFieldCollection is MemberReference)
-                parentMemberReference = parentFieldCollection as MemberReference;
+        public IReference parentIReference;
 
-            this.parentIMemberCollection = parentFieldCollection;
-            this.parentValue = owner;
+        public MemberReference(IReference parentFieldCollection, MemberInfo memberInfo)
+        {
+            childMemberReferences = new List<MemberReference>();
+
+            this.parentIReference = parentFieldCollection;
+            this.parentValue = parentFieldCollection.GetValue();
             this.memberInfo = memberInfo;
         }
 
@@ -40,34 +39,19 @@ namespace Tweach
                 value = propertyInfo.GetValue(parentValue);
             }
 
-            if (parentValue.GetType().IsValueType)
-                parentMemberReference.PushValue(parentValue);
-        }
-
-        public List<MemberReference> GetMembers()
-        {
-            return childMemberReferences;
-        }
-
-        public string GetName()
-        {
-            return memberInfo.Name;
+            if (parentValue.GetType().IsValueType && parentIReference is MemberReference)
+                (parentIReference as MemberReference).PushValue(parentValue);
         }
 
         public Type GetMemberType()
         {
-            //Not getting value.Type here as it can be set as a GameObjectReference, while the memberinfo will always reflect the member itself
+            //Not getting value.GetType here as it can be set as a GameObjectReference, while the memberinfo will always reflect the member itself
             return memberInfo is FieldInfo ? (memberInfo as FieldInfo).FieldType : (memberInfo as PropertyInfo).PropertyType;
         }
-
-        public string GetTypeName()
-        {
-            return GetMemberType().Name;
-        }
-
-        public INamedChild GetParentAsINamedChild()
-        {
-            return parentIMemberCollection;
-        }
+        public List<MemberReference> GetMembers() => childMemberReferences;
+        public string GetName() => memberInfo.Name;
+        public string GetTypeName() => GetMemberType().Name;
+        public IReference GetParentReference() => parentIReference;
+        public object GetValue() => value;
     }
 }

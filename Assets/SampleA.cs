@@ -3,7 +3,7 @@
 [System.Serializable]
 public class SamplASubClass
 {
-    public int A = 4;
+    [Tweach]public int A = 4;
 
     public string Info = "I am in a subclass";
 }
@@ -11,6 +11,7 @@ public class SamplASubClass
 public class SampleA : MonoBehaviour
 {
     public string StringProperty { get; set; }
+    public bool BoolProperty { get; set; }
     public float floatA = 10, floatB = 20;
     public Vector2 hedfkljsldkfj;
     public Vector3 lajsdoiad = new Vector3();
@@ -32,12 +33,12 @@ public class SampleA : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 }

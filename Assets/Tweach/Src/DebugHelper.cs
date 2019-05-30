@@ -46,7 +46,7 @@ namespace Tweach
         {
             var debugString = $"{Indent(i)}{componentReference.GetName()}\n";
 
-            foreach (var item in componentReference.childFieldReferences)
+            foreach (var item in componentReference.childMemberReferences)
             {
                 debugString += GetFieldDebugString(item, i + 1);
             }
@@ -85,9 +85,6 @@ namespace Tweach
 
         public static string Indent(int indentation, int spacing = 4)
         {
-            if (indentation > 100)
-                throw new System.Exception("Recursion > 100, throwing for protection");
-
             return new string(' ', indentation * spacing);
         }
     }

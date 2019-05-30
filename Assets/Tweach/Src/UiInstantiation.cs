@@ -27,6 +27,9 @@ namespace Tweach
 
         static void FillHierarchy(List<GameObjectReference> gameObjectReferences, GameObjectReference gameObjectReference, GameObject hierarchyMemberPrefab, int depth = -1)
         {
+            if (!gameObjectReference.matchesSearchQuery)
+                return;
+
             depth++;
 
             var hierarchyMemberGameObject = GameObject.Instantiate(hierarchyMemberPrefab, Tweach.hierarchyContentTransform);
@@ -48,8 +51,12 @@ namespace Tweach
                     FillHierarchy(gameObjectReferences, child, hierarchyMemberPrefab, depth);
         }
 
-        static void ClearComponentsAndFieldsContent(INamedChild namedChild)
+        static void ClearComponentsAndFieldsContent(IReference reference)
         {
+            var viewPortRect = Tweach.componentsAndFieldsContentTransform.GetComponentInParent<Mask>().rectTransform.rect;
+            Tweach.componentsAndFieldsContentTransform.GetComponentInParent<GridLayoutGroup>().cellSize =
+                new Vector2(viewPortRect.width / Tweach.gridSize.x, viewPortRect.height / Tweach.gridSize.y);
+
             foreach (var instantiatedObject in instantiatedComponentsAndFieldsObjects)
                 GameObject.Destroy(instantiatedObject);
 
@@ -57,21 +64,21 @@ namespace Tweach
 
             Tweach.backButton.interactable = false;
 
-            if (namedChild != null)
-                Tweach.pathText.text = GetPathString(namedChild, null);
+            if (reference != null)
+                Tweach.pathText.text = GetPathString(reference, null);
             else
                 Tweach.pathText.text = "";
         }
 
-        static string GetPathString(INamedChild namedChild, string path)
+        static string GetPathString(IReference reference, string path)
         {
             if (path == null)
-                path = namedChild.GetName();
+                path = reference.GetName();
             else
-                path = namedChild.GetName() + " / " + path;
+                path = reference.GetName() + " / " + path;
 
-            if (namedChild.GetParentAsINamedChild() != null)
-                path = GetPathString(namedChild.GetParentAsINamedChild(), path);
+            if (reference.GetParentReference() != null)
+                path = GetPathString(reference.GetParentReference(), path);
 
             return path;
         }
@@ -94,19 +101,24 @@ namespace Tweach
                 uiComponent.valueLabel.text = componentReference.value.GetType().Name;
                 uiComponent.action = (v) => InstantiateMemberCollection(componentReference);
             }
+
+            InstantiateMemberCollection(gameObjectReference, false);
         }
 
-        public static void InstantiateMemberCollection(IMemberCollection fieldCollection)
+        public static void InstantiateMemberCollection(IReference fieldCollection, bool clearContent = true)
         {
-            ClearComponentsAndFieldsContent(fieldCollection);
+            if (clearContent)
+            {
+                ClearComponentsAndFieldsContent(fieldCollection);
 
-            Tweach.backButton.interactable = true;
-            Tweach.backButton.onClick.RemoveAllListeners();
+                Tweach.backButton.interactable = true;
+                Tweach.backButton.onClick.RemoveAllListeners();
 
-            if (fieldCollection is ComponentReference)
-                Tweach.backButton.onClick.AddListener(() => InstantiateComponents((fieldCollection as ComponentReference).parentGameObjectReference));
-            else
-                Tweach.backButton.onClick.AddListener(() => InstantiateMemberCollection((fieldCollection as MemberReference).parentIMemberCollection));
+                if (fieldCollection is ComponentReference)
+                    Tweach.backButton.onClick.AddListener(() => InstantiateComponents((fieldCollection as ComponentReference).parentGameObjectReference));
+                else
+                    Tweach.backButton.onClick.AddListener(() => InstantiateMemberCollection((fieldCollection as MemberReference).parentIReference));
+            }
 
             foreach (var memberReference in fieldCollection.GetMembers())
             {

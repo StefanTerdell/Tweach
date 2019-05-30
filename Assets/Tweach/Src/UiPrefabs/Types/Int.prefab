@@ -215,7 +215,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.4433962, g: 0.4433962, b: 0.4433962, a: 0.30588236}
+  m_Color: {r: 0, g: 0.83515644, b: 1, a: 0.30588236}
   m_RaycastTarget: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -245,7 +245,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   background: {fileID: 7031306801462588033}
   nameLabel: {fileID: 2559232811757383506}
-  buttonLabel: {fileID: 0}
+  valueLabel: {fileID: 0}
   inputField: {fileID: 2677309434145308320}
   toggle: {fileID: 0}
 --- !u!1 &6248682782930300788
