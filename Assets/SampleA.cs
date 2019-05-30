@@ -16,7 +16,7 @@ public class SampleA : MonoBehaviour
     public Vector2 hedfkljsldkfj;
     public Vector3 lajsdoiad = new Vector3();
     public bool IamBool;
-    public bool SoAmI = true;
+    static public bool SoAmI = true;
 
     public Color color = new Color();
 

@@ -6,6 +6,13 @@ using UnityEngine;
 
 namespace Tweach
 {
+    public enum PushValueResult
+    {
+        Unchanged,
+        Succeded,
+        Failed
+    }
+
     public class MemberReference : IReference
     {
         public object value;
@@ -21,25 +28,43 @@ namespace Tweach
             this.memberInfo = memberInfo;
         }
 
-        public void PushValue(object newValue)
+        public PushValueResult PushValue(object newValue, bool ignoreObjectEquals = false)
         {
-            if (memberInfo is FieldInfo)
+            if (object.Equals(value, newValue) && !ignoreObjectEquals)
             {
-                var fieldInfo = memberInfo as FieldInfo;
-
-                fieldInfo.SetValue(parentValue, newValue);
-                value = fieldInfo.GetValue(parentValue);
+                return PushValueResult.Unchanged;
             }
-            else if (memberInfo is PropertyInfo)
+
+            try //This trycatch seems to do exactly nothing. Value setting is delayed somehow and exceptions go uncaught
             {
-                var propertyInfo = memberInfo as PropertyInfo;
-                
-                propertyInfo.SetValue(parentValue, newValue);
-                value = propertyInfo.GetValue(parentValue);
+                if (memberInfo is FieldInfo)
+                {
+                    var fieldInfo = memberInfo as FieldInfo;
+
+                    fieldInfo.SetValue(parentValue, newValue);
+                    value = fieldInfo.GetValue(parentValue);
+                }
+                else if (memberInfo is PropertyInfo)
+                {
+                    var propertyInfo = memberInfo as PropertyInfo;
+
+                    propertyInfo.SetValue(parentValue, newValue);
+                    value = propertyInfo.GetValue(parentValue);
+                }
+                else
+                {
+                    return PushValueResult.Failed;
+                }
+            }
+            catch
+            {
+                return PushValueResult.Failed;
             }
 
             if (parentValue.GetType().IsValueType)
-                (parentIReference as MemberReference).PushValue(parentValue);
+                (parentIReference as MemberReference).PushValue(parentValue, true);
+
+            return PushValueResult.Succeded;
         }
 
         public void AddMember(MemberReference memberReference)

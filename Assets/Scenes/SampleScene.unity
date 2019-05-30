@@ -246,7 +246,6 @@ MonoBehaviour:
   hedfkljsldkfj: {x: 0, y: 0}
   lajsdoiad: {x: 0, y: 0, z: 0}
   IamBool: 0
-  SoAmI: 1
   color: {r: 0, g: 0, b: 0, a: 0}
   stringA: I am a string
   samplASubClass:
@@ -433,6 +432,36 @@ PrefabInstance:
       propertyPath: _variableGridLayoutGroup
       value: 
       objectReference: {fileID: 1198209128}
+    - target: {fileID: 5188920083961082632, guid: 7fa33f1595d41214888d28d74f69cfb1,
+        type: 3}
+      propertyPath: _hideMemberlessObjectsAndComponents
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5188920083961082632, guid: 7fa33f1595d41214888d28d74f69cfb1,
+        type: 3}
+      propertyPath: _mapProperties
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5188920083961082632, guid: 7fa33f1595d41214888d28d74f69cfb1,
+        type: 3}
+      propertyPath: _perilousMode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5188920083961082632, guid: 7fa33f1595d41214888d28d74f69cfb1,
+        type: 3}
+      propertyPath: _mapPrivateMembers
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5188920083961082632, guid: 7fa33f1595d41214888d28d74f69cfb1,
+        type: 3}
+      propertyPath: _mapStaticMembers
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5188920083961082632, guid: 7fa33f1595d41214888d28d74f69cfb1,
+        type: 3}
+      propertyPath: _mapInstanceMembers
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7fa33f1595d41214888d28d74f69cfb1, type: 3}
 --- !u!1 &641722417
@@ -564,7 +593,6 @@ MonoBehaviour:
   hedfkljsldkfj: {x: 0, y: 0}
   lajsdoiad: {x: 0, y: 0, z: 0}
   IamBool: 0
-  SoAmI: 1
   color: {r: 0, g: 0, b: 0, a: 0}
   stringA: I am a string
   samplASubClass:

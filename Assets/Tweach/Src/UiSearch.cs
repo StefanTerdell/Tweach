@@ -19,7 +19,7 @@ namespace Tweach
                 MatchDownwards(query, Tweach.gameObjectReferences);
             }
 
-            UiInstantiation.FillHierarchy(Tweach.gameObjectReferences);
+            Tweach.GetUiInstantiatorWithSettings().FillHierarchy(Tweach.gameObjectReferences);
         }
 
         void MatchDownwards(string query, List<GameObjectReference> gameObjectReferences)
@@ -38,8 +38,9 @@ namespace Tweach
 
         void PropagateMatchUpwards(GameObjectReference gameObjectReference)
         {
-            Debug.Log(gameObjectReference.GetName());
             gameObjectReference.matchesSearchQuery = true;
+            gameObjectReference.expanded = true;
+
             if (gameObjectReference.parentGameObjectReference != null)
                 PropagateMatchUpwards(gameObjectReference.parentGameObjectReference);
         }
@@ -49,6 +50,7 @@ namespace Tweach
             foreach (var gameObjectReference in gameObjectReferences)
             {
                 gameObjectReference.matchesSearchQuery = true;
+                gameObjectReference.expanded = false;
 
                 if (gameObjectReference.childGameObjectReferences != null)
                     PropagateMatchDownwards(gameObjectReference.childGameObjectReferences);

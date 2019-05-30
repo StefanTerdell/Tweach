@@ -6,13 +6,63 @@ using UnityEngine.SceneManagement;
 
 namespace Tweach
 {
-    public static class ReferenceMapper
+    public class ReferenceMapper
     {
-        static Dictionary<Component, ComponentReference> componentReferenceDictionary;
-        static Dictionary<GameObject, GameObjectReference> gameObjectReferenceDictionary;
-
-        public static List<GameObjectReference> GetRootGameObjectReferences()
+        public ReferenceMapper(bool hideMemberlessObjectsAndComponents,
+                               bool respectHideInInspector,
+                               bool mapOnlyMembersMarkedWithTweach,
+                               bool mapPublic,
+                               bool mapNonPublic,
+                               bool mapFields,
+                               bool mapProperties,
+                               bool mapInstance,
+                               bool mapStatic)
         {
+            componentReferenceDictionary = new Dictionary<Component, ComponentReference>();
+            gameObjectReferenceDictionary = new Dictionary<GameObject, GameObjectReference>();
+
+            this.hideMemberlessObjectsAndComponents = hideMemberlessObjectsAndComponents;
+            this.respectHideInInspector = respectHideInInspector;
+            this.mapOnlyMembersMarkedWithTweach = mapOnlyMembersMarkedWithTweach;
+            this.mapFields = mapFields;
+            this.mapProperties = mapProperties;
+
+            var flags = BindingFlags.Default;
+
+            if (mapInstance)
+                flags |= BindingFlags.Instance;
+
+            if (mapStatic)
+                flags |= BindingFlags.Static;
+
+            if (mapPublic)
+                flags |= BindingFlags.Public;
+
+            if (mapNonPublic)
+                flags |= BindingFlags.NonPublic;
+        }
+
+        readonly bool hideMemberlessObjectsAndComponents;
+        readonly bool respectHideInInspector;
+        readonly bool mapOnlyMembersMarkedWithTweach;
+        readonly bool mapFields;
+        readonly bool mapProperties;
+
+        BindingFlags flags;
+
+        Dictionary<Component, ComponentReference> componentReferenceDictionary;
+        Dictionary<GameObject, GameObjectReference> gameObjectReferenceDictionary;
+
+        int mappedGameObjectCount;
+        int mappedComponentCount;
+        int mappedMemberCount;
+        int failedMemberCount;
+
+        public List<GameObjectReference> GetRootGameObjectReferences(bool logMapTime)
+        {
+            var sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+
             var transforms = new List<Transform>();
 
             foreach (var g in SceneManager.GetActiveScene().GetRootGameObjects())
@@ -53,33 +103,34 @@ namespace Tweach
 
                 MapMembers(gameObjectReference);
 
-                Tweach.mappedGameObjectCount++;
+                mappedGameObjectCount++;
             }
 
             foreach (var componentReference in componentReferenceDictionary.Values)
             {
                 MapMembers(componentReference);
 
-                Tweach.mappedComponentCount++;
+                mappedComponentCount++;
             }
 
-            var rootGameObjectReferences = gameObjectReferenceDictionary.Values.Where(g => g.parentGameObjectReference == null).ToList();
+            var rootGameObjectReferences = gameObjectReferenceDictionary.Values
+                .Where(g => (!hideMemberlessObjectsAndComponents || HasMembersRecursive(g, true)) && g.parentGameObjectReference == null).ToList();
 
-            componentReferenceDictionary = null;
-            gameObjectReferenceDictionary = null;
+            sw.Stop();
 
-            return Tweach.hideMemberlessObjectsAndComponents
-                ? rootGameObjectReferences.Where(gameObjectReference => HasMembersRecursive(gameObjectReference, true)).ToList()
-                : rootGameObjectReferences;
+            if (logMapTime)
+                Debug.Log($"Mapped {mappedGameObjectCount} GameObjects, {mappedComponentCount} Components and {mappedMemberCount} Members in {sw.ElapsedMilliseconds}ms. Failed to get value of {failedMemberCount} Members.");
+
+            return rootGameObjectReferences;
         }
 
-        static bool HasMembersRecursive(GameObjectReference gameObjectReference, bool removeComponentsWithoutFields)
+        bool HasMembersRecursive(GameObjectReference gameObjectReference, bool removeComponentsWithoutFields)
         {
             var count = gameObjectReference.childComponentReferences.Count;
 
             for (int i = 0; i < count; i++)
             {
-                if (gameObjectReference.childComponentReferences[i].childMemberReferences.Count > 0)
+                if (gameObjectReference.childComponentReferences[i].childMemberReferences != null)
                 {
                     return true;
                 }
@@ -98,75 +149,49 @@ namespace Tweach
             return false;
         }
 
-        static bool TryGetMemberValue(MemberInfo memberInfo, object parentValue, out object value)
+        bool TryGetMemberValue(MemberInfo memberInfo, object parentValue, out object value)
         {
             try
             {
-                value = GetMemberValue(memberInfo, parentValue);
+                if (memberInfo is FieldInfo)
+                    value = (memberInfo as FieldInfo).GetValue(parentValue);
+                else
+                    value = (memberInfo as PropertyInfo).GetValue(parentValue);
+
+                mappedMemberCount++;
+
                 return true;
             }
             catch
             {
-                // Debug.LogWarning($"Failed getting member {memberInfo.Name} from {parentValue}");
-                Tweach.mappedMemberCount--;
-                Tweach.failedMemberCount++;
                 value = null;
+
+                failedMemberCount++;
+
                 return false;
             }
         }
 
-        static object GetMemberValue(MemberInfo memberInfo, object parentValue)
+        string Trace(IReference reference, int depth, string trace = "")
         {
-            Tweach.mappedMemberCount++;
+            trace += depth + ": " + reference.GetTypeName() + ": " + reference.GetName() + "\n";
+            if (reference.GetParentReference() != null)
+                trace = Trace(reference.GetParentReference(), --depth, trace);
 
-            if (memberInfo is FieldInfo)
-                return (memberInfo as FieldInfo).GetValue(parentValue);
-            else
-                return (memberInfo as PropertyInfo).GetValue(parentValue);
+            return trace;
         }
 
-        static void MapMembers(IReference parentReference, int depth = 0)
+        void MapMembers(IReference parentReference, int depth = 0)
         {
             depth++;
-            if (depth > 20)
-                throw new System.Exception("Serialization depth limit reached. Recursive reference?");
+            if (depth > 19)
+                throw new System.Exception("Serialization depth limit reached. Recursive reference?\nTrace:\n" + Trace(parentReference, depth));
 
-            var memberInfos = new List<MemberInfo>();
-
-            if (Tweach.mapFields)
-                memberInfos.AddRange(parentReference.GetValue()
-                    .GetType()
-                    .GetFields(Tweach.GetBindingFlags())
-                    .Where(f => 
-                    {
-                        var att = f.GetCustomAttributes();
-                        return !Tweach.respectHideInInspector || !att.Any(a => a.GetType() == typeof(HideInInspector))
-                            && !Tweach.mapOnlyMembersMarkedWithTweach || att.Any(a => a.GetType() == typeof(TweachAttribute));
-                    })
-                    .Select(f => f as MemberInfo));
-
-            if (Tweach.mapProperties)
-                memberInfos.AddRange(parentReference.GetValue()
-                    .GetType()
-                    .GetProperties(Tweach.GetBindingFlags())
-                    .Where(p =>
-                    {
-                        var acc = p.GetAccessors();
-                        var att = p.GetCustomAttributes();
-                        return acc.Any(a => a.Name == $"get_{p.Name}")
-                            && acc.Any(a => a.Name == $"set_{p.Name}")
-                            && !Tweach.respectHideInInspector || !att.Any(a => a.GetType() == typeof(HideInInspector))
-                            && !Tweach.mapOnlyMembersMarkedWithTweach || att.Any(a => a.GetType() == typeof(TweachAttribute));
-                    })
-                    .Select(p => p as MemberInfo));
+            var memberInfos = parentReference.GetValue().GetType().GetMembers(flags).Where(m => EvaluateMemberInfo(m));
 
             foreach (var memberInfo in memberInfos)
             {
-                object memberValue;
-
-                if (Tweach.perilousMode)
-                    memberValue = GetMemberValue(memberInfo, parentReference.GetValue());
-                else if (!TryGetMemberValue(memberInfo, parentReference.GetValue(), out memberValue))
+                if (!TryGetMemberValue(memberInfo, parentReference.GetValue(), out var memberValue))
                     continue;
 
                 var memberReference = new MemberReference(parentReference, memberInfo);
@@ -191,6 +216,47 @@ namespace Tweach
 
                 parentReference.AddMember(memberReference);
             }
+        }
+
+        bool EvaluateMemberInfo(MemberInfo m)
+        {
+            if (m is FieldInfo)
+            {
+                if (!mapFields)
+                    return false;
+
+                var f = m as FieldInfo;
+
+                if (f.Attributes.HasFlag(FieldAttributes.InitOnly) || f.Attributes.HasFlag(FieldAttributes.Literal))
+                    return false;
+            }
+            else if (m is PropertyInfo)
+            {
+                if (!mapProperties)
+                    return false;
+
+                var p = m as PropertyInfo;
+
+                if (!p.CanRead || !p.CanWrite)
+                    return false;
+            }
+            else
+            {
+                return false;
+            }
+
+            var c = m.GetCustomAttributes();
+
+            if (c.Any(a => a.GetType() == typeof(TweachAttribute)))
+                return true;
+
+            if (mapOnlyMembersMarkedWithTweach)
+                return false;
+
+            if (respectHideInInspector && c.Any(a => a.GetType() == typeof(HideInInspector)))
+                return false;
+
+            return true;
         }
     }
 }

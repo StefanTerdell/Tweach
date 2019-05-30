@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace Tweach
 {
-    public static class UiInitialization
+    public static class UiInitializers
     {
         public static Dictionary<Type, (string prefabName, Action<MemberReference, UiComponent> init)> Registry = new Dictionary<Type, (string prefabName, Action<MemberReference, UiComponent> init)>()
         {
@@ -15,8 +15,8 @@ namespace Tweach
                 {
                     uiComponent.valueLabel.text = fieldReference.GetTypeName();
                     uiComponent.action = (object n) => {
-                        UiInstantiation.FillHierarchy(Tweach.gameObjectReferences);
-                        UiInstantiation.InstantiateComponents(fieldReference.value as GameObjectReference);
+                        Tweach.GetUiInstantiatorWithSettings().FillHierarchy(Tweach.gameObjectReferences);
+                        Tweach.GetUiInstantiatorWithSettings().InstantiateComponents(fieldReference.value as GameObjectReference);
                     };
                 })
             },
@@ -25,8 +25,8 @@ namespace Tweach
                 {
                     uiComponent.valueLabel.text = fieldReference.GetTypeName();
                     uiComponent.action = (object n) => {
-                        UiInstantiation.FillHierarchy(Tweach.gameObjectReferences);
-                        UiInstantiation.InstantiateMemberCollection(fieldReference.value as ComponentReference);
+                        Tweach.GetUiInstantiatorWithSettings().FillHierarchy(Tweach.gameObjectReferences);
+                        Tweach.GetUiInstantiatorWithSettings().InstantiateMemberCollection(fieldReference.value as ComponentReference);
                     };
                 })
             },
@@ -35,7 +35,7 @@ namespace Tweach
                 {
                     uiComponent.inputField.text = fieldReference.value == null ? "" : fieldReference.value.ToString();
                     uiComponent.action = (object newValue) => 
-                        fieldReference.PushValue(newValue);
+                        uiComponent.SetChangeColor(fieldReference.PushValue(newValue));
                 })
             },
             {
@@ -43,7 +43,7 @@ namespace Tweach
                 {
                     uiComponent.inputField.text = ((int)fieldReference.value).ToString(CultureInfo.InvariantCulture.NumberFormat);
                     uiComponent.action = (object newValue) =>
-                        fieldReference.PushValue(int.Parse((string)newValue, NumberStyles.Integer, CultureInfo.InvariantCulture.NumberFormat));
+                        uiComponent.SetChangeColor(fieldReference.PushValue(int.Parse((string)newValue, NumberStyles.Integer, CultureInfo.InvariantCulture.NumberFormat)));
                 })
             },
             {
@@ -51,7 +51,7 @@ namespace Tweach
                 {
                     uiComponent.inputField.text = ((float)fieldReference.value).ToString(CultureInfo.InvariantCulture.NumberFormat);
                     uiComponent.action = (object newValue) =>
-                        fieldReference.PushValue(float.Parse(((string)newValue).Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture.NumberFormat));
+                        uiComponent.SetChangeColor(fieldReference.PushValue(float.Parse(((string)newValue).Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture.NumberFormat)));
                 })
             },
             {
@@ -59,7 +59,7 @@ namespace Tweach
                 {
                     uiComponent.toggle.isOn = (bool)fieldReference.value;
                     uiComponent.action = (object newValue) =>
-                        fieldReference.PushValue((bool)newValue);
+                        uiComponent.SetChangeColor(fieldReference.PushValue((bool)newValue));
                 })
             }
         };
