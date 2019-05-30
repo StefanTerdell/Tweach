@@ -187,7 +187,7 @@ namespace Tweach
             if (depth > 19)
                 throw new System.Exception("Serialization depth limit reached. Recursive reference?\nTrace:\n" + Trace(parentReference, depth));
 
-            var memberInfos = parentReference.GetValue().GetType().GetMembers(flags).Where(m => EvaluateMemberInfo(m));
+            var memberInfos = parentReference.GetValue().GetType().GetMembers().Where(m => EvaluateMemberInfo(m));
 
             foreach (var memberInfo in memberInfos)
             {

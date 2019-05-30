@@ -124,11 +124,11 @@ MonoBehaviour:
   mapOnlyMembersMarkedWithTweach: 0
   respectHideInInspector: 1
   mapFields: 1
-  fieldVisibility: 2
-  fieldObjectType: 0
   mapProperties: 1
-  propertyVisibility: 2
-  propertyObjectType: 0
+  mapPublic: 1
+  mapNonPublic: 1
+  mapStatic: 1
+  mapInstance: 1
   hideMemberlessObjectsAndComponents: 1
   maxMappingDepth: 20
   logMapTime: 1
@@ -139,7 +139,6 @@ MonoBehaviour:
   _exitButton: {fileID: 5188920084299803995}
   _searchField: {fileID: 5188920085994491884}
   _pathText: {fileID: 5188920084546912806}
-  run: 0
 --- !u!223 &5188920083961082637
 Canvas:
   m_ObjectHideFlags: 0
