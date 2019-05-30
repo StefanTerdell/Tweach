@@ -16,7 +16,7 @@ namespace Tweach
 
         public void SetChangedColor()
         {
-            background.color = new Color(background.color.g, 1, background.color.b, background.color.a);
+            background.color = new Color(background.color.r, 1, background.color.b, background.color.a);
         }
 
         public void ValueChangeComponentCallback(string newValue)

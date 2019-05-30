@@ -92,11 +92,11 @@ namespace Tweach
             {
                 var uiComponent = InstantiateUiComponent("Component");
                 uiComponent.valueLabel.text = componentReference.value.GetType().Name;
-                uiComponent.action = (v) => InstantiateFieldCollection(componentReference);
+                uiComponent.action = (v) => InstantiateMemberCollection(componentReference);
             }
         }
 
-        public static void InstantiateFieldCollection(IFieldCollection fieldCollection)
+        public static void InstantiateMemberCollection(IMemberCollection fieldCollection)
         {
             ClearComponentsAndFieldsContent(fieldCollection);
 
@@ -106,28 +106,28 @@ namespace Tweach
             if (fieldCollection is ComponentReference)
                 Tweach.backButton.onClick.AddListener(() => InstantiateComponents((fieldCollection as ComponentReference).parentGameObjectReference));
             else
-                Tweach.backButton.onClick.AddListener(() => InstantiateFieldCollection((fieldCollection as FieldReference).parentIFieldCollection));
+                Tweach.backButton.onClick.AddListener(() => InstantiateMemberCollection((fieldCollection as MemberReference).parentIMemberCollection));
 
-            foreach (var fieldReference in fieldCollection.GetFields())
+            foreach (var memberReference in fieldCollection.GetMembers())
             {
-                if (fieldReference.value != null && UiInitialization.Registry.ContainsKey(fieldReference.value.GetType()))
+                if (memberReference.value != null && UiInitialization.Registry.ContainsKey(memberReference.value.GetType()))
                 {
-                    var uiComponent = InstantiateUiComponent(UiInitialization.Registry[fieldReference.value.GetType()].prefabName);
-                    uiComponent.nameLabel.text = fieldReference.fieldInfo.Name;
-                    UiInitialization.Registry[fieldReference.value.GetType()].init.Invoke(fieldReference, uiComponent);
+                    var uiComponent = InstantiateUiComponent(UiInitialization.Registry[memberReference.value.GetType()].prefabName);
+                    uiComponent.nameLabel.text = memberReference.GetName();
+                    UiInitialization.Registry[memberReference.value.GetType()].init.Invoke(memberReference, uiComponent);
                 }
-                else if (fieldReference.childFieldReferences != null && fieldReference.childFieldReferences.Count > 0)
+                else if (memberReference.childMemberReferences != null && memberReference.childMemberReferences.Count > 0)
                 {
                     var uiComponent = InstantiateUiComponent("Class");
-                    uiComponent.nameLabel.text = fieldReference.fieldInfo.Name;
-                    uiComponent.valueLabel.text = fieldReference.fieldInfo.FieldType.Name;
-                    uiComponent.action = (v) => InstantiateFieldCollection(fieldReference);
+                    uiComponent.nameLabel.text = memberReference.GetName();
+                    uiComponent.valueLabel.text = memberReference.GetMemberType().Name;
+                    uiComponent.action = (v) => InstantiateMemberCollection(memberReference);
                 }
                 else
                 {
                     var uiComponent = InstantiateUiComponent("Unknown");
-                    uiComponent.nameLabel.text = fieldReference.fieldInfo.Name;
-                    uiComponent.valueLabel.text = fieldReference.fieldInfo.FieldType.Name;
+                    uiComponent.nameLabel.text = memberReference.GetName();
+                    uiComponent.valueLabel.text = memberReference.GetMemberType().Name;
                 }
             }
         }

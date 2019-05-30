@@ -21,6 +21,11 @@ namespace Tweach
             return value.name;
         }
 
+        public string GetTypeName()
+        {
+            return value.GetType().Name;
+        }
+
         public INamedChild GetParentAsINamedChild()
         {
             return parentGameObjectReference;

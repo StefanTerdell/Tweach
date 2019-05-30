@@ -14,7 +14,7 @@ namespace Tweach
 
             foreach (var g in SceneManager.GetActiveScene().GetRootGameObjects())
             {
-                transforms.AddRange(g.GetComponentsInChildren<Transform>());
+                transforms.AddRange(g.GetComponentsInChildren<Transform>()); //This may need work. Seems to cap at 100 objects
             }
 
             var gameObjectReferenceDictionary = new Dictionary<GameObject, GameObjectReference>();
@@ -52,19 +52,19 @@ namespace Tweach
             foreach (var componentReference in componentReferenceDictionary.Values)
             {
                 if (componentReference.childFieldReferences == null)
-                    componentReference.childFieldReferences = new List<FieldReference>();
+                    componentReference.childFieldReferences = new List<MemberReference>();
 
-                GetFields(onlyMarkedWithTweachAttribute, componentReference, componentReference.value, componentReferenceDictionary, gameObjectReferenceDictionary);
+                MapMembers(onlyMarkedWithTweachAttribute, componentReference, componentReference.value, componentReferenceDictionary, gameObjectReferenceDictionary);
             }
 
             var rootGameObjectReferences = gameObjectReferenceDictionary.Values.Where(g => g.parentGameObjectReference == null).ToList();
 
             return hideFieldlessObjectsAndComponents
-                ? rootGameObjectReferences.Where(gameObjectReference => HasFieldsRecursive(gameObjectReference, true)).ToList()
+                ? rootGameObjectReferences.Where(gameObjectReference => HasMembersRecursive(gameObjectReference, true)).ToList()
                 : rootGameObjectReferences;
         }
 
-        static bool HasFieldsRecursive(GameObjectReference gameObjectReference, bool removeComponentsWithoutFields)
+        static bool HasMembersRecursive(GameObjectReference gameObjectReference, bool removeComponentsWithoutFields)
         {
             var count = gameObjectReference.childComponentReferences.Count;
 
@@ -83,52 +83,85 @@ namespace Tweach
             }
 
             foreach (var gameObjectReferenceChild in gameObjectReference.childGameObjectReferences)
-                if (HasFieldsRecursive(gameObjectReferenceChild, removeComponentsWithoutFields))
+                if (HasMembersRecursive(gameObjectReferenceChild, removeComponentsWithoutFields))
                     return true;
 
             return false;
         }
 
-        static void GetFields(bool onlyMarkedWithTweachAttribute, IFieldCollection parentIFieldCollection, object parentValue, Dictionary<Component, ComponentReference> componentReferenceDictionary, Dictionary<GameObject, GameObjectReference> gameObjectReferenceDictionary, int depth = 0)
+        static bool TryGetMemberValue(MemberInfo memberInfo, object parentValue, out object value)
+        {
+            try
+            {
+                if (memberInfo is FieldInfo)
+                    value = (memberInfo as FieldInfo).GetValue(parentValue);
+                else
+                    value = (memberInfo as PropertyInfo).GetValue(parentValue);
+                    
+                return true;
+            }
+            catch
+            {
+                value = null;
+                return false;
+            }
+        }
+
+        static void MapMembers(bool onlyMarkedWithTweachAttribute, IMemberCollection parentIMemberCollection, object parentValue, Dictionary<Component, ComponentReference> componentReferenceDictionary, Dictionary<GameObject, GameObjectReference> gameObjectReferenceDictionary, int depth = 0)
         {
             depth++;
-            if (depth > 10)
+            if (depth > 20)
                 throw new System.Exception("Serialization depth limit reached. Recursive reference?");
 
-            var fieldInfos = parentValue
-                .GetType()
-                .GetFields(Tweach.GetBindingFlags())
-                .Where(f => !f.GetCustomAttributes<HideInInspector>().Any())
-                .Where(f => !onlyMarkedWithTweachAttribute || f.GetCustomAttributes<TweachAttribute>().Any());
+            var memberInfos = new List<MemberInfo>();
 
-            foreach (var fieldInfo in fieldInfos)
+            if (Tweach.mapFields)
+                memberInfos.AddRange(parentValue
+                    .GetType()
+                    .GetFields(Tweach.GetBindingFlags())
+                    .Where(f => !f.GetCustomAttributes<HideInInspector>().Any())
+                    .Where(f => !onlyMarkedWithTweachAttribute || f.GetCustomAttributes<TweachAttribute>().Any())
+                    .Select(f => f as MemberInfo));
+
+            if (Tweach.mapProperties)
+                memberInfos.AddRange(parentValue
+                    .GetType()
+                    .GetProperties(Tweach.GetBindingFlags())
+                    .Where(p => p.GetAccessors().Any(a => a.Name == $"get_{p.Name}")
+                             && p.GetAccessors().Any(a => a.Name == $"set_{p.Name}"))
+                    .Where(p => !p.GetCustomAttributes<HideInInspector>().Any())
+                    .Where(p => !onlyMarkedWithTweachAttribute || p.GetCustomAttributes<TweachAttribute>().Any())
+                    .Select(p => p as MemberInfo));
+
+            foreach (var memberInfo in memberInfos)
             {
-                var fieldValue = fieldInfo.GetValue(parentValue);
+                if (!TryGetMemberValue(memberInfo, parentValue, out var memberValue))
+                    return;
 
-                var fieldReference = new FieldReference(parentIFieldCollection, parentValue, fieldInfo);
+                var memberReference = new MemberReference(parentIMemberCollection, parentValue, memberInfo);
 
-                if (fieldValue is Component && (Component)fieldValue != null)
+                if (memberValue is Component && (Component)memberValue != null)
                 {
-                    fieldReference.value = componentReferenceDictionary[(Component)fieldValue];
+                    memberReference.value = componentReferenceDictionary[(Component)memberValue];
                 }
-                else if (fieldValue is GameObject && (GameObject)fieldValue != null)
+                else if (memberValue is GameObject && (GameObject)memberValue != null)
                 {
-                    fieldReference.value = gameObjectReferenceDictionary[(GameObject)fieldValue];
+                    memberReference.value = gameObjectReferenceDictionary[(GameObject)memberValue];
                 }
                 else
                 {
-                    fieldReference.value = fieldValue;
+                    memberReference.value = memberValue;
 
-                    if (fieldValue != null && !fieldInfo.FieldType.IsPrimitive && fieldInfo.FieldType != typeof(string))
+                    if (memberValue != null && !memberReference.GetMemberType().IsPrimitive && memberReference.GetMemberType() != typeof(string))
                     {
-                        if (fieldReference.childFieldReferences == null)
-                            fieldReference.childFieldReferences = new List<FieldReference>();
+                        if (memberReference.childMemberReferences == null)
+                            memberReference.childMemberReferences = new List<MemberReference>();
 
-                        GetFields(onlyMarkedWithTweachAttribute, fieldReference, fieldValue, componentReferenceDictionary, gameObjectReferenceDictionary, depth);
+                        MapMembers(onlyMarkedWithTweachAttribute, memberReference, memberValue, componentReferenceDictionary, gameObjectReferenceDictionary, depth);
                     }
                 }
 
-                parentIFieldCollection.GetFields().Add(fieldReference);
+                parentIMemberCollection.GetMembers().Add(memberReference);
             }
         }
     }

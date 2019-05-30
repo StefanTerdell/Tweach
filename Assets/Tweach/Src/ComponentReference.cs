@@ -3,11 +3,11 @@ using UnityEngine;
 
 namespace Tweach
 {
-    public class ComponentReference : IFieldCollection
+    public class ComponentReference : IMemberCollection
     {
         public Component value;
         public GameObjectReference parentGameObjectReference;
-        public List<FieldReference> childFieldReferences;
+        public List<MemberReference> childFieldReferences;
 
         public ComponentReference(Component value, GameObjectReference gameObjectReference)
         {
@@ -15,7 +15,7 @@ namespace Tweach
             this.parentGameObjectReference = gameObjectReference;
         }
 
-        public List<FieldReference> GetFields()
+        public List<MemberReference> GetMembers()
         {
             return childFieldReferences;
         }
@@ -25,7 +25,12 @@ namespace Tweach
             return value.GetType().Name;
         }
 
-        public IFieldCollection GetParentAsIFieldCollection()
+        public string GetTypeName()
+        {
+            return GetName();
+        }
+
+        public IMemberCollection GetParentAsIFieldCollection()
         {
             return null;
         }

@@ -8,12 +8,12 @@ namespace Tweach
 {
     public static class UiInitialization
     {
-        public static Dictionary<Type, (string prefabName, Action<FieldReference, UiComponent> init)> Registry = new Dictionary<Type, (string prefabName, Action<FieldReference, UiComponent> init)>()
+        public static Dictionary<Type, (string prefabName, Action<MemberReference, UiComponent> init)> Registry = new Dictionary<Type, (string prefabName, Action<MemberReference, UiComponent> init)>()
         {
             {
-                typeof(GameObjectReference), (prefabName: "Class", init: (FieldReference fieldReference, UiComponent uiComponent) =>
+                typeof(GameObjectReference), (prefabName: "Class", init: (MemberReference fieldReference, UiComponent uiComponent) =>
                 {
-                    uiComponent.valueLabel.text = fieldReference.fieldInfo.FieldType.Name;
+                    uiComponent.valueLabel.text = fieldReference.GetTypeName();
                     uiComponent.action = (object n) => {
                         UiInstantiation.FillHierarchy(Tweach.gameObjectReferences);
                         UiInstantiation.InstantiateComponents(fieldReference.value as GameObjectReference);
@@ -21,17 +21,17 @@ namespace Tweach
                 })
             },
             {
-                typeof(ComponentReference), (prefabName: "Class", init: (FieldReference fieldReference, UiComponent uiComponent) =>
+                typeof(ComponentReference), (prefabName: "Class", init: (MemberReference fieldReference, UiComponent uiComponent) =>
                 {
-                    uiComponent.valueLabel.text = fieldReference.fieldInfo.FieldType.Name;
+                    uiComponent.valueLabel.text = fieldReference.GetTypeName();
                     uiComponent.action = (object n) => {
                         UiInstantiation.FillHierarchy(Tweach.gameObjectReferences);
-                        UiInstantiation.InstantiateFieldCollection(fieldReference.value as ComponentReference);
+                        UiInstantiation.InstantiateMemberCollection(fieldReference.value as ComponentReference);
                     };
                 })
             },
             {
-                typeof(string), (prefabName: "String", init: (FieldReference fieldReference, UiComponent uiComponent) =>
+                typeof(string), (prefabName: "String", init: (MemberReference fieldReference, UiComponent uiComponent) =>
                 {
                     uiComponent.inputField.text = fieldReference.value == null ? "" : fieldReference.value.ToString();
                     uiComponent.action = (object newValue) => 
@@ -39,7 +39,7 @@ namespace Tweach
                 })
             },
             {
-                typeof(int), (prefabName: "Int", init: (FieldReference fieldReference, UiComponent uiComponent) =>
+                typeof(int), (prefabName: "Int", init: (MemberReference fieldReference, UiComponent uiComponent) =>
                 {
                     uiComponent.inputField.text = ((int)fieldReference.value).ToString(CultureInfo.InvariantCulture.NumberFormat);
                     uiComponent.action = (object newValue) =>
@@ -47,7 +47,7 @@ namespace Tweach
                 })
             },
             {
-                typeof(float), (prefabName: "Float", init: (FieldReference fieldReference, UiComponent uiComponent) =>
+                typeof(float), (prefabName: "Float", init: (MemberReference fieldReference, UiComponent uiComponent) =>
                 {
                     uiComponent.inputField.text = ((float)fieldReference.value).ToString(CultureInfo.InvariantCulture.NumberFormat);
                     uiComponent.action = (object newValue) =>
@@ -55,7 +55,7 @@ namespace Tweach
                 })
             },
             {
-                typeof(bool), (prefabName: "Bool", init: (FieldReference fieldReference, UiComponent uiComponent) => 
+                typeof(bool), (prefabName: "Bool", init: (MemberReference fieldReference, UiComponent uiComponent) => 
                 {
                     uiComponent.toggle.isOn = (bool)fieldReference.value;
                     uiComponent.action = (object newValue) =>

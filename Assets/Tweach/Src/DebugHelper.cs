@@ -19,7 +19,7 @@ namespace Tweach
 
         static string GetGameObjectDebugString(GameObjectReference gameObjectReference, int i = 0)
         {
-            var debugString = $"{Indent(i)}{gameObjectReference.value.name}:\n";
+            var debugString = $"{Indent(i)}{gameObjectReference.GetName()}:\n";
 
             if (gameObjectReference.childGameObjectReferences.Any())
             {
@@ -44,7 +44,7 @@ namespace Tweach
 
         static string GetComponentDebugString(ComponentReference componentReference, int i)
         {
-            var debugString = $"{Indent(i)}{componentReference.value.GetType().Name}\n";
+            var debugString = $"{Indent(i)}{componentReference.GetName()}\n";
 
             foreach (var item in componentReference.childFieldReferences)
             {
@@ -54,23 +54,23 @@ namespace Tweach
             return debugString;
         }
 
-        static string GetFieldDebugString(FieldReference fieldReference, int i)
+        static string GetFieldDebugString(MemberReference memberReference, int i)
         {
             i++;
-            var debugString = $"{Indent(i)}{fieldReference.fieldInfo.FieldType.Name} {fieldReference.fieldInfo.Name}:";
+            var debugString = $"{Indent(i)}{memberReference.GetTypeName()} {memberReference.GetName()}:";
 
-            if (fieldReference.childFieldReferences.Any())
+            if (memberReference.childMemberReferences.Any())
             {
                 debugString += "\n";
-                foreach (var item in fieldReference.childFieldReferences)
+                foreach (var item in memberReference.childMemberReferences)
                 {
                     debugString += GetFieldDebugString(item, i + 1);
                 }
             }
             else
             {
-                if (fieldReference.value != null)
-                    debugString += $" {fieldReference.value.ToString()}\n";
+                if (memberReference.value != null)
+                    debugString += $" {memberReference.value.ToString()}\n";
                 else
                     debugString += $" null\n";
             }

@@ -180,10 +180,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe0a3138de62da84abcc3c9cbee4ad75, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _onlyMarked: 0
-  _privateFields: 1
-  _publicFields: 1
-  _hideFieldlessObjectsAndComponents: 1
+  _mapOnlyMarkedWithTweach: 0
+  _mapPrivateMembers: 1
+  _mapPublicMembers: 1
+  _mapFields: 1
+  _mapProperties: 1
+  _hideMemberlessObjectsAndComponents: 0
   _hierarchyContentTransform: {fileID: 5188920084213174885}
   _componentsAndFieldsContentTransform: {fileID: 5188920084322951867}
   _backButton: {fileID: 5188920084072997955}

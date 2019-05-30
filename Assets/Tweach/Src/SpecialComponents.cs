@@ -22,37 +22,37 @@ namespace Tweach
         public static Dictionary<Type, SpecialComponent> specialComponents = new Dictionary<Type, SpecialComponent>() {
             {
                 typeof(CharacterController), new SpecialComponent() {
-                    
+
                 }
             }
         };
 
         public static void LoadSpecialComponents()
         {
-            specialComponents = new SpecialComponent[] {
-                new SpecialComponent() {
-                    name = "myName",
-                    displayName = "myDisplayName",
-                    properties = new SpecialComponentVariable[] {
-                        new SpecialComponentVariable() {
-                            name = "propName",
-                            displayName = "propDisplayName"
-                        }
-                    },
-                    fields = new SpecialComponentVariable[] {
-                        new SpecialComponentVariable() {
-                            name = "fieldName",
-                            displayName = "fieldDisplayName"
-                        }
-                    }
-                }
-            };
+            // specialComponents = new SpecialComponent[] {
+            //     new SpecialComponent() {
+            //         name = "myName",
+            //         displayName = "myDisplayName",
+            //         properties = new SpecialComponentVariable[] {
+            //             new SpecialComponentVariable() {
+            //                 name = "propName",
+            //                 displayName = "propDisplayName"
+            //             }
+            //         },
+            //         fields = new SpecialComponentVariable[] {
+            //             new SpecialComponentVariable() {
+            //                 name = "fieldName",
+            //                 displayName = "fieldDisplayName"
+            //             }
+            //         }
+            //     }
+            // };
 
-            var sp = new SpecialComponent()
-            {
-                name = "saldjkf",
-                displayName = "aöslksld"
-            };
+            // var sp = new SpecialComponent()
+            // {
+            //     name = "saldjkf",
+            //     displayName = "aöslksld"
+            // };
 
             Debug.Log(JsonUtility.ToJson(specialComponents, true));
 

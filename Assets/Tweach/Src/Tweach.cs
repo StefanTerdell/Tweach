@@ -10,14 +10,18 @@ namespace Tweach
     public class Tweach : MonoBehaviour
     {
         [Header("Options")]
-        [Tooltip("Only Serialize Fields Marked With TweachAttribute")]
-        public bool _onlyMarked;
-        [Tooltip("Serialize Private Fields")]
-        public bool _privateFields;
-        [Tooltip("Serialize Public Fields")]
-        public bool _publicFields;
+        [Tooltip("Only Map Members Marked With TweachAttribute")]
+        public bool _mapOnlyMarkedWithTweach;
+        [Tooltip("Map Private Members")]
+        public bool _mapPrivateMembers;
+        [Tooltip("Map Public Members")]
+        public bool _mapPublicMembers;
+        [Tooltip("Map fields")]
+        public bool _mapFields;
+        [Tooltip("Map Properties. Must implement both Get and Set!")]
+        public bool _mapProperties;
         [Tooltip("Hide Components Without Serialized Fields And GameObjects Without Components Or Only Hidden Components")]
-        public bool _hideFieldlessObjectsAndComponents;
+        public bool _hideMemberlessObjectsAndComponents;
 
         [Header("Unity UI Components")]
         public Transform _hierarchyContentTransform;
@@ -37,6 +41,9 @@ namespace Tweach
         public static Button exitButton => instance._exitButton;
         public static InputField searchField => instance._searchField;
         public static Text pathText => instance._pathText;
+        
+        public static bool mapProperties => instance._mapProperties;
+        public static bool mapFields => instance._mapFields;
 
         private void Awake()
         {
@@ -55,9 +62,7 @@ namespace Tweach
 
         private void Start()
         {
-            SpecialComponents.LoadSpecialComponents();
-
-            gameObjectReferences = ReferenceMapper.GetRootGameObjectReferences(_onlyMarked, _hideFieldlessObjectsAndComponents);
+            gameObjectReferences = ReferenceMapper.GetRootGameObjectReferences(_mapOnlyMarkedWithTweach, _hideMemberlessObjectsAndComponents);
             UiInstantiation.FillHierarchy(gameObjectReferences);
             // Debug.Log(DebugHelper.GetDebugString(gameObjectReferences));
         }
@@ -79,10 +84,10 @@ namespace Tweach
         {
             BindingFlags flags = BindingFlags.Instance;
 
-            if (instance._privateFields)
+            if (instance._mapPrivateMembers)
                 flags |= BindingFlags.NonPublic;
 
-            if (instance._publicFields)
+            if (instance._mapPublicMembers)
                 flags |= BindingFlags.Public;
 
             return flags;
