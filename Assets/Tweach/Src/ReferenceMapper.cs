@@ -175,13 +175,8 @@ namespace Tweach
                     if (memberValue != null)
                     {
                         var type = memberReference.GetMemberType();
-
-                        if (type.IsEnum)
-                        {
-                            memberReference.enumValues = new bool[System.Enum.GetNames(type).Length];
-                            memberReference.enumValues[(int)memberValue] = true;
-                        }
-                        else if (!type.IsPrimitive && type != typeof(string))
+                        
+                        if (!type.IsPrimitive && type != typeof(string) && !type.IsEnum)
                         {
                             MapMembers(memberReference, depth);
                         }

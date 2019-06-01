@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 [System.Serializable]
 public class SamplASubClass
@@ -10,17 +11,26 @@ public class SamplASubClass
 
 public enum IamEnum
 {
-    one,
-    two,
-    three,
-    cunt
+    one = 3,
+    two = 6,
+    three = 100,
+    cunt = 23
+}
+
+[Flags]
+public enum FlagEnum
+{
+    zerost = 0,
+    first = 1,
+    second = 2,
+    third = 4,
+    fourth = 8
 }
 
 public class SampleA : MonoBehaviour
 {
-
-    public int enumi;
-    int _enumi;
+    public LayerMask layerMask;
+    public FlagEnum flagEnum = FlagEnum.first | FlagEnum.fourth;
     public IamEnum enuuuuM;
     public CameraScriptSettings cameraScriptSettings;
     public string StringProperty { get; set; }
@@ -42,20 +52,4 @@ public class SampleA : MonoBehaviour
     public SampleA other;
 
     public GameObject otherGo;
-
-    // Start is called before the first frame update
-    void Start()
-    {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        if (enumi != _enumi)
-        {
-            _enumi = enumi;
-            // enuuuuM = en
-        }
-    }
 }

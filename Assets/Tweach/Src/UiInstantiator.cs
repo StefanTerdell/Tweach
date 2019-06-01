@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
@@ -200,20 +201,31 @@ namespace Tweach
             ClearComponentsAndFieldsContent(enumMember);
 
             var names = Enum.GetNames(enumMember.GetMemberType());
-            var value = (int)enumMember.GetValue();
+            var value = enumMember.GetValue();
+            var hasFlags = enumMember.GetMemberType().GetCustomAttributes().Any(a => a.GetType() == typeof(FlagsAttribute));
 
             for (int i = 0; i < names.Length; i++)
             {
                 var uiComponent = InstantiateUiComponent("bool");
-
                 uiComponent.nameLabel.text = names[i];
-                uiComponent.toggle.isOn = i == value;
 
-                int valueCopyOfI = i; //this was a fun bug to find
-                
+                var enumValueOfI = Enum.GetValues(value.GetType()).GetValue(i);
+
+                var isDefault = (int)enumValueOfI == 0;
+                var flagged = ((Enum)value).HasFlag((Enum)enumValueOfI) && !(isDefault && (int)value != 0);
+
+                uiComponent.toggle.isOn = hasFlags ? flagged : (int)enumValueOfI == (int)value;
+
                 uiComponent.action = (v) =>
                 {
-                    enumMember.PushValue(valueCopyOfI);
+                    if (hasFlags && !isDefault)
+                        if (flagged)
+                            enumMember.PushValue((int)value - (int)enumValueOfI);
+                        else
+                            enumMember.PushValue((int)value + (int)enumValueOfI);
+                    else
+                        enumMember.PushValue((int)enumValueOfI);
+
                     InstantiateEnumValueCollection(enumMember);
                 };
             }
