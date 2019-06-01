@@ -16,7 +16,8 @@ namespace Tweach
                                bool mapFields,
                                bool mapProperties,
                                bool mapInstance,
-                               bool mapStatic)
+                               bool mapStatic,
+                               int maxDepth)
         {
             componentReferenceDictionary = new Dictionary<Component, ComponentReference>();
             gameObjectReferenceDictionary = new Dictionary<GameObject, GameObjectReference>();
@@ -24,31 +25,25 @@ namespace Tweach
             this.hideMemberlessObjectsAndComponents = hideMemberlessObjectsAndComponents;
             this.respectHideInInspector = respectHideInInspector;
             this.mapOnlyMembersMarkedWithTweach = mapOnlyMembersMarkedWithTweach;
+            this.mapPublic = mapPublic;
+            this.mapNonPublic = mapNonPublic;
             this.mapFields = mapFields;
             this.mapProperties = mapProperties;
-
-            var flags = BindingFlags.Default;
-
-            if (mapInstance)
-                flags |= BindingFlags.Instance;
-
-            if (mapStatic)
-                flags |= BindingFlags.Static;
-
-            if (mapPublic)
-                flags |= BindingFlags.Public;
-
-            if (mapNonPublic)
-                flags |= BindingFlags.NonPublic;
+            this.mapInstance = mapInstance;
+            this.mapStatic = mapStatic;
+            this.maxDepth = maxDepth;
         }
 
         readonly bool hideMemberlessObjectsAndComponents;
         readonly bool respectHideInInspector;
         readonly bool mapOnlyMembersMarkedWithTweach;
+        readonly bool mapPublic;
+        readonly bool mapNonPublic;
         readonly bool mapFields;
         readonly bool mapProperties;
-
-        BindingFlags flags;
+        readonly bool mapInstance;
+        readonly bool mapStatic;
+        readonly int maxDepth;
 
         Dictionary<Component, ComponentReference> componentReferenceDictionary;
         Dictionary<GameObject, GameObjectReference> gameObjectReferenceDictionary;
@@ -114,7 +109,7 @@ namespace Tweach
             }
 
             var rootGameObjectReferences = gameObjectReferenceDictionary.Values
-                .Where(g => (!hideMemberlessObjectsAndComponents || HasMembersRecursive(g, true)) && g.parentGameObjectReference == null).ToList();
+                .Where(g => (!hideMemberlessObjectsAndComponents || Utilities.HasMembersRecursive(g, true)) && g.parentGameObjectReference == null).ToList();
 
             sw.Stop();
 
@@ -122,31 +117,6 @@ namespace Tweach
                 Debug.Log($"Mapped {mappedGameObjectCount} GameObjects, {mappedComponentCount} Components and {mappedMemberCount} Members in {sw.ElapsedMilliseconds}ms. Failed to get value of {failedMemberCount} Members.");
 
             return rootGameObjectReferences;
-        }
-
-        bool HasMembersRecursive(GameObjectReference gameObjectReference, bool removeComponentsWithoutFields)
-        {
-            var count = gameObjectReference.childComponentReferences.Count;
-
-            for (int i = 0; i < count; i++)
-            {
-                if (gameObjectReference.childComponentReferences[i].childMemberReferences != null)
-                {
-                    return true;
-                }
-                else if (removeComponentsWithoutFields)
-                {
-                    gameObjectReference.childComponentReferences.RemoveAt(i);
-                    i--;
-                    count--;
-                }
-            }
-
-            foreach (var gameObjectReferenceChild in gameObjectReference.childGameObjectReferences)
-                if (HasMembersRecursive(gameObjectReferenceChild, removeComponentsWithoutFields))
-                    return true;
-
-            return false;
         }
 
         bool TryGetMemberValue(MemberInfo memberInfo, object parentValue, out object value)
@@ -172,22 +142,16 @@ namespace Tweach
             }
         }
 
-        string Trace(IReference reference, int depth, string trace = "")
-        {
-            trace += depth + ": " + reference.GetTypeName() + ": " + reference.GetName() + "\n";
-            if (reference.GetParentReference() != null)
-                trace = Trace(reference.GetParentReference(), --depth, trace);
-
-            return trace;
-        }
-
         void MapMembers(IReference parentReference, int depth = 0)
         {
             depth++;
-            if (depth > 19)
-                throw new System.Exception("Serialization depth limit reached. Recursive reference?\nTrace:\n" + Trace(parentReference, depth));
+            if (depth > maxDepth)
+                throw new System.Exception("Serialization depth limit reached. Recursive reference?\nTrace:\n" + Utilities.UpwardsDebugTraceRecursive(parentReference, depth));
 
-            var memberInfos = parentReference.GetValue().GetType().GetMembers().Where(m => EvaluateMemberInfo(m));
+            var memberInfos = parentReference.GetValue()
+                .GetType()
+                .GetMembers(Utilities.GetBindingFlags(mapInstance, mapStatic, mapPublic, mapNonPublic))
+                .Where(m => EvaluateMemberInfo(m));
 
             foreach (var memberInfo in memberInfos)
             {
@@ -208,9 +172,19 @@ namespace Tweach
                 {
                     memberReference.value = memberValue;
 
-                    if (memberValue != null && !memberReference.GetMemberType().IsPrimitive && memberReference.GetMemberType() != typeof(string))
+                    if (memberValue != null)
                     {
-                        MapMembers(memberReference, depth);
+                        var type = memberReference.GetMemberType();
+
+                        if (type.IsEnum)
+                        {
+                            memberReference.enumValues = new bool[System.Enum.GetNames(type).Length];
+                            memberReference.enumValues[(int)memberValue] = true;
+                        }
+                        else if (!type.IsPrimitive && type != typeof(string))
+                        {
+                            MapMembers(memberReference, depth);
+                        }
                     }
                 }
 
@@ -239,6 +213,9 @@ namespace Tweach
 
                 if (!p.CanRead || !p.CanWrite)
                     return false;
+
+                if (p.GetGetMethod() == null || p.GetSetMethod() == null)
+                    return false;
             }
             else
             {
@@ -252,6 +229,9 @@ namespace Tweach
 
             if (mapOnlyMembersMarkedWithTweach)
                 return false;
+
+            if (c.Any(a => a.GetType() == typeof(SerializeField)))
+                return true;
 
             if (respectHideInInspector && c.Any(a => a.GetType() == typeof(HideInInspector)))
                 return false;

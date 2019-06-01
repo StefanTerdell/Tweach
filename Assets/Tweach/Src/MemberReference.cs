@@ -20,6 +20,7 @@ namespace Tweach
         public MemberInfo memberInfo;
         public List<MemberReference> childMemberReferences;
         public IReference parentIReference;
+        public bool[] enumValues;
 
         public MemberReference(IReference parentFieldCollection, MemberInfo memberInfo)
         {

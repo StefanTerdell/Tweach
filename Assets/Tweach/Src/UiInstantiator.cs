@@ -58,7 +58,7 @@ namespace Tweach
             instantiatedHierarchyObjects.Add(hierarchyMemberGameObject);
 
             var hierarchyMemberText = hierarchyMemberGameObject.GetComponent<Text>();
-            hierarchyMemberText.text = $" {DebugHelper.Indent(depth)}{gameObjectReference.value.name}";
+            hierarchyMemberText.text = $" {Utilities.Indent(depth)}{gameObjectReference.value.name}";
 
             var hierarchyMemberButton = hierarchyMemberGameObject.GetComponent<Button>();
             hierarchyMemberButton.onClick.AddListener(() =>
@@ -76,24 +76,24 @@ namespace Tweach
         void ClearComponentsAndFieldsContent(IReference reference)
         {
             var viewPortRect = componentsAndFieldsContentTransform.GetComponentInParent<Mask>().rectTransform.rect;
-            componentsAndFieldsContentTransform.GetComponentInParent<GridLayoutGroup>().cellSize =
-                new Vector2(viewPortRect.width / gridSize.x, viewPortRect.height / gridSize.y);
+
+            componentsAndFieldsContentTransform.GetComponentInParent<GridLayoutGroup>().cellSize = new Vector2(viewPortRect.width / gridSize.x, viewPortRect.height / gridSize.y);
 
             foreach (var instantiatedObject in instantiatedComponentsAndFieldsObjects)
                 GameObject.Destroy(instantiatedObject);
 
             instantiatedComponentsAndFieldsObjects.Clear();
 
-            backButton.interactable = false;
+            pathText.text = GetPathString(reference, null);
 
-            if (reference != null)
-                pathText.text = GetPathString(reference, null);
-            else
-                pathText.text = "";
+            SetBackButtonStuff(reference);
         }
 
         static string GetPathString(IReference reference, string path)
         {
+            if (reference == null)
+                return "";
+
             if (path == null)
                 path = reference.GetName();
             else
@@ -109,14 +109,6 @@ namespace Tweach
         {
             ClearComponentsAndFieldsContent(gameObjectReference);
 
-            backButton.interactable = true;
-            backButton.onClick.RemoveAllListeners();
-
-            if (gameObjectReference.parentGameObjectReference != null)
-                backButton.onClick.AddListener(() => InstantiateComponents(gameObjectReference.parentGameObjectReference));
-            else
-                backButton.onClick.AddListener(() => ClearComponentsAndFieldsContent(null));
-
             foreach (var componentReference in gameObjectReference.childComponentReferences)
             {
                 var uiComponent = InstantiateUiComponent("Component");
@@ -130,28 +122,21 @@ namespace Tweach
         public void InstantiateMemberCollection(IReference fieldCollection, bool clearContent = true)
         {
             if (clearContent)
-            {
                 ClearComponentsAndFieldsContent(fieldCollection);
-
-                backButton.interactable = true;
-                backButton.onClick.RemoveAllListeners();
-
-                if (fieldCollection is ComponentReference)
-                    backButton.onClick.AddListener(() => InstantiateComponents((fieldCollection as ComponentReference).parentGameObjectReference));
-                else
-                    backButton.onClick.AddListener(() => InstantiateMemberCollection((fieldCollection as MemberReference).parentIReference));
-            }
 
             var memberReferences = fieldCollection.GetMembers();
 
             if (memberReferences != null)
+            {
                 foreach (var memberReference in memberReferences)
                 {
-                    if (memberReference.value != null && UiInitializers.Registry.ContainsKey(memberReference.value.GetType()))
+                    var type = memberReference.GetMemberType();
+
+                    if (memberReference.value != null && UiInitializers.Registry.ContainsKey(type))
                     {
                         var uiComponent = InstantiateUiComponent(UiInitializers.Registry[memberReference.value.GetType()].prefabName);
                         uiComponent.nameLabel.text = memberReference.GetName();
-                        UiInitializers.Registry[memberReference.value.GetType()].init.Invoke(memberReference, uiComponent);
+                        UiInitializers.Registry[type].init.Invoke(memberReference, uiComponent);
                     }
                     else if (memberReference.childMemberReferences != null && memberReference.childMemberReferences.Count > 0)
                     {
@@ -160,13 +145,78 @@ namespace Tweach
                         uiComponent.valueLabel.text = memberReference.GetMemberType().Name;
                         uiComponent.action = (v) => InstantiateMemberCollection(memberReference);
                     }
+                    else if (type.IsEnum)
+                    {
+                        var uiComponent = InstantiateUiComponent("Class");
+                        uiComponent.nameLabel.text = memberReference.GetName();
+                        uiComponent.valueLabel.text = memberReference.GetMemberType().Name;
+                        uiComponent.action = (v) => InstantiateEnumValueCollection(memberReference);
+                    }
                     else
                     {
                         var uiComponent = InstantiateUiComponent("Unknown");
                         uiComponent.nameLabel.text = memberReference.GetName();
-                        uiComponent.valueLabel.text = memberReference.GetMemberType().Name;
+                        if (memberReference.value == null)
+                            uiComponent.valueLabel.text = memberReference.GetMemberType().Name + " (Null)";
+                        else
+                            uiComponent.valueLabel.text = memberReference.GetMemberType().Name;
                     }
                 }
+            }
+        }
+
+        void SetBackButtonStuff(IReference reference)
+        {
+            if (reference == null)
+            {
+                backButton.interactable = false;
+            }
+            else
+            {
+                var parentReference = reference.GetParentReference();
+
+                if (parentReference == null)
+                {
+                    ClearComponentsAndFieldsContent(null);
+                }
+                else
+                {
+                    backButton.interactable = true;
+
+                    backButton.onClick.RemoveAllListeners();
+
+                    if (parentReference is GameObjectReference)
+                        backButton.onClick.AddListener(() => InstantiateComponents(parentReference as GameObjectReference));
+                    else if (parentReference is ComponentReference)
+                        backButton.onClick.AddListener(() => InstantiateComponents((parentReference as ComponentReference).parentGameObjectReference));
+                    else
+                        backButton.onClick.AddListener(() => InstantiateMemberCollection((parentReference as MemberReference).parentIReference));
+                }
+            }
+        }
+
+        void InstantiateEnumValueCollection(MemberReference enumMember)
+        {
+            ClearComponentsAndFieldsContent(enumMember);
+
+            var names = Enum.GetNames(enumMember.GetMemberType());
+            var value = (int)enumMember.GetValue();
+
+            for (int i = 0; i < names.Length; i++)
+            {
+                var uiComponent = InstantiateUiComponent("bool");
+
+                uiComponent.nameLabel.text = names[i];
+                uiComponent.toggle.isOn = i == value;
+
+                int valueCopyOfI = i; //this was a fun bug to find
+                
+                uiComponent.action = (v) =>
+                {
+                    enumMember.PushValue(valueCopyOfI);
+                    InstantiateEnumValueCollection(enumMember);
+                };
+            }
         }
 
         UiComponent InstantiateUiComponent(string prefabName)

@@ -8,8 +8,21 @@ public class SamplASubClass
     public string Info = "I am in a subclass";
 }
 
+public enum IamEnum
+{
+    one,
+    two,
+    three,
+    cunt
+}
+
 public class SampleA : MonoBehaviour
 {
+
+    public int enumi;
+    int _enumi;
+    public IamEnum enuuuuM;
+    public CameraScriptSettings cameraScriptSettings;
     public string StringProperty { get; set; }
     public bool BoolProperty { get; set; }
     public float floatA = 10, floatB = 20;
@@ -39,6 +52,10 @@ public class SampleA : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        if (enumi != _enumi)
+        {
+            _enumi = enumi;
+            // enuuuuM = en
+        }
     }
 }

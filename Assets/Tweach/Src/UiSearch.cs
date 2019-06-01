@@ -12,14 +12,14 @@ namespace Tweach
         {
             if (query.Trim() == string.Empty)
             {
-                PropagateMatchDownwards(Tweach.gameObjectReferences);
+                PropagateMatchDownwards(TweachMain.gameObjectReferences);
             }
             else
             {
-                MatchDownwards(query, Tweach.gameObjectReferences);
+                MatchDownwards(query, TweachMain.gameObjectReferences);
             }
 
-            Tweach.GetUiInstantiatorWithSettings().FillHierarchy(Tweach.gameObjectReferences);
+            TweachMain.GetUiInstantiatorWithSettings().FillHierarchy(TweachMain.gameObjectReferences);
         }
 
         void MatchDownwards(string query, List<GameObjectReference> gameObjectReferences)

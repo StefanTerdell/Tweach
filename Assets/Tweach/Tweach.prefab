@@ -75,10 +75,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5188920083961082636}
-  - component: {fileID: 5188920083961082632}
   - component: {fileID: 5188920083961082637}
   - component: {fileID: 5188920083961082638}
   - component: {fileID: 5188920083961082639}
+  - component: {fileID: 5503144687699774337}
   m_Layer: 5
   m_Name: Tweach
   m_TagString: Untagged
@@ -108,37 +108,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
---- !u!114 &5188920083961082632
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5188920083961082634}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe0a3138de62da84abcc3c9cbee4ad75, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _gridSize: {x: 3, y: 4}
-  mapOnlyMembersMarkedWithTweach: 0
-  respectHideInInspector: 1
-  mapFields: 1
-  mapProperties: 1
-  mapPublic: 1
-  mapNonPublic: 1
-  mapStatic: 1
-  mapInstance: 1
-  hideMemberlessObjectsAndComponents: 1
-  maxMappingDepth: 20
-  logMapTime: 1
-  logMap: 0
-  _hierarchyContentTransform: {fileID: 5188920084213174885}
-  _componentsAndFieldsContentTransform: {fileID: 5188920084322951867}
-  _backButton: {fileID: 5188920084072997955}
-  _exitButton: {fileID: 5188920084299803995}
-  _searchField: {fileID: 5188920085994491884}
-  _pathText: {fileID: 5188920084546912806}
 --- !u!223 &5188920083961082637
 Canvas:
   m_ObjectHideFlags: 0
@@ -199,6 +168,35 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!114 &5503144687699774337
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5188920083961082634}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 144c618b9ffe07e49ae21ba3cafc7ae6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gridSize: {x: 3, y: 4}
+  mapOnlyMembersMarkedWithTweach: 0
+  respectHideInInspector: 1
+  mapFields: 1
+  mapProperties: 0
+  mapPublic: 1
+  mapNonPublic: 0
+  mapStatic: 0
+  mapInstance: 1
+  hideMemberlessObjectsAndComponents: 1
+  maxDepth: 20
+  logMapTime: 0
+  logMap: 0
+  hierarchyContentTransform: {fileID: 5188920084213174885}
+  componentsAndFieldsContentTransform: {fileID: 5188920084322951867}
+  backButton: {fileID: 5188920084072997955}
+  pathText: {fileID: 5188920084546912806}
 --- !u!1 &5188920084072997981
 GameObject:
   m_ObjectHideFlags: 0
@@ -313,7 +311,7 @@ MonoBehaviour:
     m_PressedTrigger: Pressed
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 5188920084072997954}
   m_OnClick:
     m_PersistentCalls:
@@ -515,7 +513,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 5188920083961082632}
+      - m_Target: {fileID: 5503144687699774337}
         m_MethodName: Destroy
         m_Mode: 1
         m_Arguments:

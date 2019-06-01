@@ -15,8 +15,8 @@ namespace Tweach
                 {
                     uiComponent.valueLabel.text = fieldReference.GetTypeName();
                     uiComponent.action = (object n) => {
-                        Tweach.GetUiInstantiatorWithSettings().FillHierarchy(Tweach.gameObjectReferences);
-                        Tweach.GetUiInstantiatorWithSettings().InstantiateComponents(fieldReference.value as GameObjectReference);
+                        TweachMain.GetUiInstantiatorWithSettings().FillHierarchy(TweachMain.gameObjectReferences);
+                        TweachMain.GetUiInstantiatorWithSettings().InstantiateComponents(fieldReference.value as GameObjectReference);
                     };
                 })
             },
@@ -25,8 +25,8 @@ namespace Tweach
                 {
                     uiComponent.valueLabel.text = fieldReference.GetTypeName();
                     uiComponent.action = (object n) => {
-                        Tweach.GetUiInstantiatorWithSettings().FillHierarchy(Tweach.gameObjectReferences);
-                        Tweach.GetUiInstantiatorWithSettings().InstantiateMemberCollection(fieldReference.value as ComponentReference);
+                        TweachMain.GetUiInstantiatorWithSettings().FillHierarchy(TweachMain.gameObjectReferences);
+                        TweachMain.GetUiInstantiatorWithSettings().InstantiateMemberCollection(fieldReference.value as ComponentReference);
                     };
                 })
             },
