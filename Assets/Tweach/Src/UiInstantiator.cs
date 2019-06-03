@@ -93,7 +93,7 @@ namespace Tweach
         static string GetPathString(IReference reference, string path = null)
         {
             if (reference == null)
-                return "";
+                return "null";
 
             if (path == null)
                 path = reference.GetName();
@@ -168,7 +168,7 @@ namespace Tweach
 
                 if (parentReference == null)
                 {
-                    ClearComponentsAndFieldsContent(null);
+                    backButton.interactable = false;
                 }
                 else
                 {
