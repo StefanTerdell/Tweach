@@ -96,8 +96,6 @@ namespace Tweach
         public Type GetMemberType()
         {
             return value != null ? value.GetType() : (memberInfo is FieldInfo ? (memberInfo as FieldInfo).FieldType : (memberInfo as PropertyInfo).PropertyType);
-            //Not getting value.GetType here as it can be set as a GameObjectReference, while the memberinfo will always reflect the member itself
-            // return isArrayMember ? value.GetType() : memberInfo is FieldInfo ? (memberInfo as FieldInfo).FieldType : (memberInfo as PropertyInfo).PropertyType;
         }
 
         public List<MemberReference> GetMembers() => childMemberReferences;
