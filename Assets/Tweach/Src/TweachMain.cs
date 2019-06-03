@@ -32,6 +32,7 @@ namespace Tweach
         public Text pathText;
 
         public static List<GameObjectReference> gameObjectReferences;
+        public static UiInstantiator uiInstantiator;
         static TweachMain instance;
         string baseTweachAssetPath;
         internal static object run;
@@ -46,16 +47,21 @@ namespace Tweach
 
         void OnEnable()
         {
+            if (mapNonPublic && mapStatic && !mapOnlyMembersMarkedWithTweach)
+                Debug.LogWarning("Mapping all non public static fields can be dangerous!");
+
             gameObjectReferences = GetReferenceMapperWithSettings().GetRootGameObjectReferences(logMapTime);
             
             if (logMap) 
                 Debug.Log(Utilities.GetDebugString(gameObjectReferences));
 
-            GetUiInstantiatorWithSettings().FillHierarchy(gameObjectReferences);
+            uiInstantiator = GetUiInstantiatorWithSettings(); //For search function
+            uiInstantiator.FillHierarchy(gameObjectReferences);
         }
 
         void OnDisable() {
             gameObjectReferences = null; //Let GC collect the static list
+            uiInstantiator = null; //and the uiInstatiator
             runOnExit?.Invoke();
         }
 
@@ -64,7 +70,7 @@ namespace Tweach
             Destroy(gameObject);
         }
 
-        public static UiInstantiator GetUiInstantiatorWithSettings()
+        UiInstantiator GetUiInstantiatorWithSettings()
         {
             return new UiInstantiator(instance.baseTweachAssetPath, 
                                       instance.hierarchyContentTransform, 

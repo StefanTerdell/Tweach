@@ -19,7 +19,7 @@ namespace Tweach
                 MatchDownwards(query, TweachMain.gameObjectReferences);
             }
 
-            TweachMain.GetUiInstantiatorWithSettings().FillHierarchy(TweachMain.gameObjectReferences);
+            TweachMain.uiInstantiator.FillHierarchy(TweachMain.gameObjectReferences);
         }
 
         void MatchDownwards(string query, List<GameObjectReference> gameObjectReferences)

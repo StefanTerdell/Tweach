@@ -39,6 +39,7 @@ namespace Tweach
             isArrayMember = true;
         }
 
+
         public PushValueResult PushValue(object newValue, bool ignoreObjectEquals = false)
         {
             if (!ignoreObjectEquals && object.Equals(value, newValue))
@@ -46,7 +47,7 @@ namespace Tweach
                 return PushValueResult.Unchanged;
             }
 
-            try //This trycatch seems to do exactly nothing. Value setting is delayed somehow and exceptions go uncaught
+            try //this pretty much does nothing because Unity doesnt throw exceptions on value set errors, it only logs an error. need to use logcallback
             {
                 if (isArrayMember)
                 {
