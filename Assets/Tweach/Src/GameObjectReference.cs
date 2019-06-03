@@ -7,7 +7,7 @@ namespace Tweach
     {
         public bool expanded;
         public bool matchesSearchQuery = true;
-        public GameObject value;
+        GameObject value;
         public GameObjectReference parentGameObjectReference;
         public List<GameObjectReference> childGameObjectReferences;
         public List<ComponentReference> childComponentReferences;
@@ -26,6 +26,9 @@ namespace Tweach
             childMemberReferences.Add(memberReference);
         }
 
+        public GameObject GetGameObjectValue() => value;
+
+        public void SetValue(object value) => this.value = value as GameObject;
         public string GetName() => value.name;
         public string GetTypeName() => value.GetType().Name;
         public IReference GetParentReference() => parentGameObjectReference;

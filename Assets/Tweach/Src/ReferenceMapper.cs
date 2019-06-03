@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -87,23 +89,23 @@ namespace Tweach
 
             foreach (var gameObjectReference in gameObjectReferenceDictionary.Values)
             {
-                gameObjectReference.childComponentReferences = gameObjectReference.value.GetComponents<Component>()
+                gameObjectReference.childComponentReferences = gameObjectReference.GetGameObjectValue().GetComponents<Component>()
                     .Select(c => new ComponentReference(c, gameObjectReferenceDictionary[c.gameObject]))
                     .ToList();
 
                 foreach (var componentReference in gameObjectReference.childComponentReferences)
                 {
-                    componentReferenceDictionary.Add(componentReference.value, componentReference);
+                    componentReferenceDictionary.Add(componentReference.GetComponentValue(), componentReference);
                 }
 
-                MapMembers(gameObjectReference);
+                MapChildMembers(gameObjectReference);
 
                 mappedGameObjectCount++;
             }
 
             foreach (var componentReference in componentReferenceDictionary.Values)
             {
-                MapMembers(componentReference);
+                MapChildMembers(componentReference);
 
                 mappedComponentCount++;
             }
@@ -142,48 +144,69 @@ namespace Tweach
             }
         }
 
-        void MapMembers(IReference parentReference, int depth = 0)
+        void MapChildMembers(IReference parentReference, int depth = 0)
         {
             depth++;
             if (depth > maxDepth)
                 throw new System.Exception("Serialization depth limit reached. Recursive reference?\nTrace:\n" + Utilities.UpwardsDebugTraceRecursive(parentReference, depth));
 
-            var memberInfos = parentReference.GetValue()
-                .GetType()
-                .GetMembers(Utilities.GetBindingFlags(mapInstance, mapStatic, mapPublic, mapNonPublic))
-                .Where(m => EvaluateMemberInfo(m));
+            var parentValue = parentReference.GetValue();
+            var parentType = parentValue.GetType();
 
-            foreach (var memberInfo in memberInfos)
+            if (typeof(IList).IsAssignableFrom(parentType))
             {
-                if (!TryGetMemberValue(memberInfo, parentReference.GetValue(), out var memberValue))
-                    continue;
+                var parentIListValue = (IList) parentValue;
 
-                var memberReference = new MemberReference(parentReference, memberInfo);
-
-                if (memberValue is Component && (Component)memberValue != null && componentReferenceDictionary.ContainsKey((Component)memberValue))
+                for (int i = 0; i < parentIListValue.Count; i++)
                 {
-                    memberReference.value = componentReferenceDictionary[(Component)memberValue];
+                    var memberReference = new MemberReference(parentReference, i);
+                    SetMemberValue(parentIListValue[i], memberReference, depth);
+                    parentReference.AddMember(memberReference);
                 }
-                else if (memberValue is GameObject && (GameObject)memberValue != null && gameObjectReferenceDictionary.ContainsKey((GameObject)memberValue))
-                {
-                    memberReference.value = gameObjectReferenceDictionary[(GameObject)memberValue];
-                }
-                else
-                {
-                    memberReference.value = memberValue;
+            }
+            else
+            {
+                var memberInfos = parentType
+                    .GetMembers(Utilities.GetBindingFlags(mapInstance, mapStatic, mapPublic, mapNonPublic))
+                    .Where(m => EvaluateMemberInfo(m));
 
-                    if (memberValue != null)
+                foreach (var memberInfo in memberInfos)
+                {
+                    if (!TryGetMemberValue(memberInfo, parentReference.GetValue(), out var memberValue))
+                        continue;
+
+                    var value = new MemberReference(parentReference, memberInfo);
+
+                    SetMemberValue(memberValue, value, depth);
+
+                    parentReference.AddMember(value);
+                }
+            }
+        }
+
+        private void SetMemberValue(object value, MemberReference memberReference, int depth)
+        {
+            if (value is Component && (Component)value != null && componentReferenceDictionary.ContainsKey((Component)value))
+            {
+                memberReference.SetValue(componentReferenceDictionary[(Component)value]);
+            }
+            else if (value is GameObject && (GameObject)value != null && gameObjectReferenceDictionary.ContainsKey((GameObject)value))
+            {
+                memberReference.SetValue(gameObjectReferenceDictionary[(GameObject)value]);
+            }
+            else
+            {
+                memberReference.SetValue(value);
+
+                if (value != null)
+                {
+                    var type = memberReference.GetMemberType();
+
+                    if (!type.IsPrimitive && type != typeof(string) && !type.IsEnum)
                     {
-                        var type = memberReference.GetMemberType();
-                        
-                        if (!type.IsPrimitive && type != typeof(string) && !type.IsEnum)
-                        {
-                            MapMembers(memberReference, depth);
-                        }
+                        MapChildMembers(memberReference, depth);
                     }
                 }
-
-                parentReference.AddMember(memberReference);
             }
         }
 

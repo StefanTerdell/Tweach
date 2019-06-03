@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 [System.Serializable]
 public class SamplASubClass
 {
-    [Tweach]public int A = 4;
+    [Tweach] public int A = 4;
 
     public string Info = "I am in a subclass";
 }
@@ -29,6 +30,24 @@ public enum FlagEnum
 
 public class SampleA : MonoBehaviour
 {
+    public Dictionary<string, string> kjdfkjdo = new Dictionary<string, string>() {
+        {"kdfj", "kgiufg"},
+        {"ofigoifg", ",vmb,vmb"}
+    };
+    public bool[] IAmABoolArray = new bool[] { true, true, false, false, true };
+    public List<string> stringList = new List<string>() { "hello", "hi", "watup" };
+    public List<SamplASubClass> kjdfkjf = new List<SamplASubClass>() {
+        new SamplASubClass() {
+            A = 9083983,
+            Info = "List member!"
+        },
+        new SamplASubClass() {
+            A = 9843,
+            Info = "List member 2!"
+        }
+    };
+
+    public int[][] doubleArray = new int[][] { new int[] { 1, 2, 3, 4 }, new int[] { 6, 5, 4, 3 } };
     public LayerMask layerMask;
     public FlagEnum flagEnum = FlagEnum.first | FlagEnum.fourth;
     public IamEnum enuuuuM;

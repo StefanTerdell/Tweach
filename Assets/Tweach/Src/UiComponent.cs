@@ -11,7 +11,7 @@ namespace Tweach
         public Text valueLabel;
         public InputField inputField;
         public Toggle toggle;
-
+        public Image colorPreview;
         public Action<object> action;
 
         public void SetChangeColor(PushValueResult pushValueResult)

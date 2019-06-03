@@ -192,7 +192,7 @@ MonoBehaviour:
   hideMemberlessObjectsAndComponents: 1
   maxDepth: 20
   logMapTime: 0
-  logMap: 0
+  logMap: 1
   hierarchyContentTransform: {fileID: 5188920084213174885}
   componentsAndFieldsContentTransform: {fileID: 5188920084322951867}
   backButton: {fileID: 5188920084072997955}

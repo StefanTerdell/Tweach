@@ -5,9 +5,9 @@ namespace Tweach
 {
     public class ComponentReference : IReference
     {
-        public Component value;
+        Component value;
         public GameObjectReference parentGameObjectReference;
-        public List<MemberReference> childMemberReferences;
+        List<MemberReference> childMemberReferences;
 
         public ComponentReference(Component value, GameObjectReference gameObjectReference)
         {
@@ -22,6 +22,13 @@ namespace Tweach
 
             childMemberReferences.Add(memberReference);
         }
+
+        public void SetValue(object value)
+        {
+            this.value = value as Component;
+        }
+
+        public Component GetComponentValue() => value;
 
         public List<MemberReference> GetMembers() => childMemberReferences;
         public string GetName() => value.GetType().Name;

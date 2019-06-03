@@ -8,7 +8,7 @@ using UnityEngine.UI;
 
 namespace Tweach
 {
-    public class UiInstantiator
+    public partial class UiInstantiator
     {
         public UiInstantiator(string baseTweachAssetPath,
                                Transform hierarchyContentTransform,
@@ -59,7 +59,7 @@ namespace Tweach
             instantiatedHierarchyObjects.Add(hierarchyMemberGameObject);
 
             var hierarchyMemberText = hierarchyMemberGameObject.GetComponent<Text>();
-            hierarchyMemberText.text = $" {Utilities.Indent(depth)}{gameObjectReference.value.name}";
+            hierarchyMemberText.text = $" {Utilities.Indent(depth)}{gameObjectReference.GetName()}";
 
             var hierarchyMemberButton = hierarchyMemberGameObject.GetComponent<Button>();
             hierarchyMemberButton.onClick.AddListener(() =>
@@ -85,12 +85,12 @@ namespace Tweach
 
             instantiatedComponentsAndFieldsObjects.Clear();
 
-            pathText.text = GetPathString(reference, null);
+            pathText.text = GetPathString(reference);
 
-            SetBackButtonStuff(reference);
+            SetBackButton(reference);
         }
 
-        static string GetPathString(IReference reference, string path)
+        static string GetPathString(IReference reference, string path = null)
         {
             if (reference == null)
                 return "";
@@ -112,8 +112,7 @@ namespace Tweach
 
             foreach (var componentReference in gameObjectReference.childComponentReferences)
             {
-                var uiComponent = InstantiateUiComponent("Component");
-                uiComponent.valueLabel.text = componentReference.value.GetType().Name;
+                var uiComponent = InstantiateUiComponent("Component", componentReference.GetTypeName());
                 uiComponent.action = (v) => InstantiateMemberCollection(componentReference);
             }
 
@@ -132,41 +131,32 @@ namespace Tweach
                 foreach (var memberReference in memberReferences)
                 {
                     var type = memberReference.GetMemberType();
+                    var name = memberReference.GetName();
 
-                    if (memberReference.value != null && UiInitializers.Registry.ContainsKey(type))
+                    if (memberReference.GetValue() != null && UiInitializers.Registry.ContainsKey(type))
                     {
-                        var uiComponent = InstantiateUiComponent(UiInitializers.Registry[memberReference.value.GetType()].prefabName);
-                        uiComponent.nameLabel.text = memberReference.GetName();
-                        UiInitializers.Registry[type].init.Invoke(memberReference, uiComponent);
+                        var uiComponent = InstantiateUiComponent(UiInitializers.Registry[memberReference.GetMemberType()].prefabName, name);
+                        UiInitializers.Registry[type].init.Invoke(this, memberReference, uiComponent);
                     }
-                    else if (memberReference.childMemberReferences != null && memberReference.childMemberReferences.Count > 0)
+                    else if (memberReference.GetMembers() != null && memberReference.GetMembers().Count > 0)
                     {
-                        var uiComponent = InstantiateUiComponent("Class");
-                        uiComponent.nameLabel.text = memberReference.GetName();
-                        uiComponent.valueLabel.text = memberReference.GetMemberType().Name;
+                        var uiComponent = InstantiateUiComponent("Class", name, type.Name);
                         uiComponent.action = (v) => InstantiateMemberCollection(memberReference);
                     }
-                    else if (type.IsEnum)
+                    else if (type.IsEnum && type.GetEnumUnderlyingType() == typeof(int))
                     {
-                        var uiComponent = InstantiateUiComponent("Class");
-                        uiComponent.nameLabel.text = memberReference.GetName();
-                        uiComponent.valueLabel.text = memberReference.GetMemberType().Name;
+                        var uiComponent = InstantiateUiComponent("Class", name, type.Name);
                         uiComponent.action = (v) => InstantiateEnumValueCollection(memberReference);
                     }
                     else
                     {
-                        var uiComponent = InstantiateUiComponent("Unknown");
-                        uiComponent.nameLabel.text = memberReference.GetName();
-                        if (memberReference.value == null)
-                            uiComponent.valueLabel.text = memberReference.GetMemberType().Name + " (Null)";
-                        else
-                            uiComponent.valueLabel.text = memberReference.GetMemberType().Name;
+                        InstantiateUiComponent("Unknown", name, memberReference.GetValue() == null ? type.Name + " (Null)" : type.Name);
                     }
                 }
             }
         }
 
-        void SetBackButtonStuff(IReference reference)
+        void SetBackButton(IReference reference)
         {
             if (reference == null)
             {
@@ -189,9 +179,9 @@ namespace Tweach
                     if (parentReference is GameObjectReference)
                         backButton.onClick.AddListener(() => InstantiateComponents(parentReference as GameObjectReference));
                     else if (parentReference is ComponentReference)
-                        backButton.onClick.AddListener(() => InstantiateComponents((parentReference as ComponentReference).parentGameObjectReference));
+                        backButton.onClick.AddListener(() => InstantiateMemberCollection(parentReference as ComponentReference));
                     else
-                        backButton.onClick.AddListener(() => InstantiateMemberCollection((parentReference as MemberReference).parentIReference));
+                        backButton.onClick.AddListener(() => InstantiateMemberCollection(parentReference as MemberReference));
                 }
             }
         }
@@ -206,11 +196,8 @@ namespace Tweach
 
             for (int i = 0; i < names.Length; i++)
             {
-                var uiComponent = InstantiateUiComponent("bool");
-                uiComponent.nameLabel.text = names[i];
-
+                var uiComponent = InstantiateUiComponent("bool", names[i]);
                 var enumValueOfI = Enum.GetValues(value.GetType()).GetValue(i);
-
                 var isDefault = (int)enumValueOfI == 0;
                 var flagged = ((Enum)value).HasFlag((Enum)enumValueOfI) && !(isDefault && (int)value != 0);
 
@@ -231,7 +218,7 @@ namespace Tweach
             }
         }
 
-        UiComponent InstantiateUiComponent(string prefabName)
+        UiComponent InstantiateUiComponent(string prefabName, string name, string valueLabel = null)
         {
             var prefab = AssetDatabase.LoadAssetAtPath($"{baseTweachAssetPath}/UiPrefabs/Types/{prefabName}.prefab", typeof(GameObject)) as GameObject;
 
@@ -240,6 +227,11 @@ namespace Tweach
             instantiatedComponentsAndFieldsObjects.Add(instantiatedObject);
 
             var uiComponent = instantiatedObject.GetComponent<UiComponent>();
+
+            uiComponent.nameLabel.text = name;
+
+            if (valueLabel != null)
+                uiComponent.valueLabel.text = valueLabel;
 
             return uiComponent;
         }

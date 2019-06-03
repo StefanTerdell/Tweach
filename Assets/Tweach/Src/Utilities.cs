@@ -38,7 +38,7 @@ namespace Tweach
 
             for (int i = 0; i < count; i++)
             {
-                if (gameObjectReference.childComponentReferences[i].childMemberReferences != null)
+                if (gameObjectReference.childComponentReferences[i].GetMembers() != null && gameObjectReference.childComponentReferences[i].GetMembers().Count > 0)
                 {
                     return true;
                 }
@@ -107,7 +107,8 @@ namespace Tweach
         {
             var debugString = $"{Indent(i)}{componentReference.GetName()}\n";
 
-            foreach (var item in componentReference.childMemberReferences)
+            if (componentReference.GetMembers() != null)
+            foreach (var item in componentReference.GetMembers())
             {
                 debugString += GetFieldDebugString(item, i + 1);
             }
@@ -120,18 +121,18 @@ namespace Tweach
             i++;
             var debugString = $"{Indent(i)}{memberReference.GetTypeName()} {memberReference.GetName()}:";
 
-            if (memberReference.childMemberReferences.Any())
+            if (memberReference.GetMembers().Any())
             {
                 debugString += "\n";
-                foreach (var item in memberReference.childMemberReferences)
+                foreach (var item in memberReference.GetMembers())
                 {
                     debugString += GetFieldDebugString(item, i + 1);
                 }
             }
             else
             {
-                if (memberReference.value != null)
-                    debugString += $" {memberReference.value.ToString()}\n";
+                if (memberReference.GetValue() != null)
+                    debugString += $" {memberReference.GetValue().ToString()}\n";
                 else
                     debugString += $" null\n";
             }

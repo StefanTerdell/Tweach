@@ -241,7 +241,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0c7f2f6fde4bb04298cdaf9bf23706c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enuuuuM: 0
+  IAmABoolArray: 0101000001
+  stringList:
+  - hello
+  - hi
+  - watup
+  kjdfkjf:
+  - A: 9083983
+    Info: List member!
+  - A: 9843
+    Info: List member 2!
+  layerMask:
+    serializedVersion: 2
+    m_Bits: 0
+  flagEnum: 9
+  enuuuuM: 3
   cameraScriptSettings: {fileID: 0}
   floatA: 10.5
   floatB: 20
@@ -446,6 +460,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0c7f2f6fde4bb04298cdaf9bf23706c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  IAmABoolArray: 0101000001
+  stringList:
+  - hello
+  - hi
+  - watup
+  kjdfkjf:
+  - A: 9083983
+    Info: List member!
+  - A: 9843
+    Info: List member 2!
+  layerMask:
+    serializedVersion: 2
+    m_Bits: 0
+  flagEnum: 9
   enuuuuM: 0
   cameraScriptSettings: {fileID: 11400000, guid: 946f56c1660b3674fa9faea88a106177,
     type: 2}
