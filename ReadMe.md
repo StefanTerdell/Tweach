@@ -13,10 +13,13 @@ Download the unitypackage in the root folder and import into your project by cli
 Assets > Import Package > Custom Package... 
 
 ## How do I open Tweach at runtime?
-
 Just instantiate the prefab Tweach.prefab in the main folder into your scene and the
 scripts will do the rest. Dont forget to pause your game. The script TweachActivator
 in the base tweach folder contains an example.
+
+## I keep getting recursion errors!
+This mostly seems to happen when mapping private properties. If you absolutely need to
+do this, try using the Tweach-attribute on the members you need to map.
 
 ## What does Tweach mean?
 Touch Tweak ^^
