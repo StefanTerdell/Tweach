@@ -1,5 +1,4 @@
 # Tweach
-(Touch Tweak) ^^
 
 ## What is it?
 
@@ -9,8 +8,18 @@ great companion when developing and tweaking mobile games. No more waiting for a
 realizing you left an Int at 4 that's supposed to be a 5, and promptly rebuilding the
 whole thing. Just open up Tweach and change it on the fly.
 
-## How do I open Tweach at runtime?
+## How do I install it?
+Download the unitypackage in the root folder and import into your project by clicking
+Assets > Import Package > Custom Package... 
 
+## How do I open Tweach at runtime?
 Just instantiate the prefab Tweach.prefab in the main folder into your scene and the
 scripts will do the rest. Dont forget to pause your game. The script TweachActivator
-in the base folder contains an example.
+in the base tweach folder contains an example.
+
+## I keep getting recursion errors!
+This mostly seems to happen when mapping private properties. If you absolutely need to
+do this, try using the Tweach-attribute on the members you need to map.
+
+## What does Tweach mean?
+Touch Tweak ^^
