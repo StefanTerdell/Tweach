@@ -21,5 +21,14 @@ in the base tweach folder contains an example.
 This mostly seems to happen when mapping private properties. If you absolutely need to
 do this, try using the Tweach-attribute on the members you need to map.
 
+## I keep getting angry error messages!
+I've noticed these popping up, especially when Tweach tries to access meshes that aren't
+read enabled. The sollution is once again in the settings. Try disabling mapping of
+private properties.
+
+## How do I change the settings?
+The settings are standard bools on the TweachMain-script in the root of the Tweach prefab.
+Either change them before hand or get the component and set them from the activation script.
+
 ## What does Tweach mean?
 Touch Tweak ^^
