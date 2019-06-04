@@ -64,10 +64,12 @@ namespace Tweach
 
             foreach (var g in SceneManager.GetActiveScene().GetRootGameObjects())
             {
-                transforms.AddRange(g.GetComponentsInChildren<Transform>()); //This may need work. Seems to cap at 200 objects
+                transforms.AddRange(g.GetComponentsInChildren<Transform>(true)); //This may need work. Seems to cap at 200 objects
             }
 
             gameObjectReferenceDictionary = new Dictionary<GameObject, GameObjectReference>();
+
+            transforms = transforms.Where(t => t.gameObject != null).ToList();
 
             foreach (var t in transforms)
             {
@@ -79,7 +81,7 @@ namespace Tweach
                 if (t.parent != null)
                     gameObjectReferenceDictionary[t.gameObject].parentGameObjectReference = gameObjectReferenceDictionary[t.parent.gameObject];
 
-                gameObjectReferenceDictionary[t.gameObject].childGameObjectReferences = t.GetComponentsInChildren<Transform>()
+                gameObjectReferenceDictionary[t.gameObject].childGameObjectReferences = t.GetComponentsInChildren<Transform>(true)
                     .Where(ct => ct.parent == t)
                     .Select(ct => gameObjectReferenceDictionary[ct.gameObject])
                     .ToList();
@@ -90,6 +92,7 @@ namespace Tweach
             foreach (var gameObjectReference in gameObjectReferenceDictionary.Values)
             {
                 gameObjectReference.childComponentReferences = gameObjectReference.GetGameObjectValue().GetComponents<Component>()
+                    .Where(c => c != null)
                     .Select(c => new ComponentReference(c, gameObjectReferenceDictionary[c.gameObject]))
                     .ToList();
 

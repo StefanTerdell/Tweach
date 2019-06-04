@@ -51,7 +51,6 @@ public class SampleA : MonoBehaviour
     public LayerMask layerMask;
     public FlagEnum flagEnum = FlagEnum.first | FlagEnum.fourth;
     public IamEnum enuuuuM;
-    public CameraScriptSettings cameraScriptSettings;
     public string StringProperty { get; set; }
     public bool BoolProperty { get; set; }
     public float floatA = 10, floatB = 20;

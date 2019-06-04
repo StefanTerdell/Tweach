@@ -3,7 +3,9 @@ guid: f762861f1747cc64284e14dfc8f79c2e
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - tweachPrefab: {fileID: 5188920083961082634, guid: 7fa33f1595d41214888d28d74f69cfb1,
+      type: 3}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
