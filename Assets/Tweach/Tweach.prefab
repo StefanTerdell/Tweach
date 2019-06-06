@@ -189,7 +189,6 @@ MonoBehaviour:
   mapNonPublic: 0
   mapStatic: 1
   mapInstance: 1
-  cacheMemberTypes: 1
   hideMemberlessObjectsAndComponents: 1
   maxDepth: 20
   logMapTime: 1
@@ -350,7 +349,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0.000010103797, y: -0.000020587097}
+  m_AnchoredPosition: {x: 0.000030502182, y: -0.000015251091}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &215455537903549063
