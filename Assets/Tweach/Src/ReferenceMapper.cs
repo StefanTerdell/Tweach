@@ -23,6 +23,7 @@ namespace Tweach
         {
             componentReferenceDictionary = new Dictionary<Component, ComponentReference>();
             gameObjectReferenceDictionary = new Dictionary<GameObject, GameObjectReference>();
+            memberTypes = new Dictionary<Type, List<MemberInfo>>();
 
             this.hideMemberlessObjectsAndComponents = hideMemberlessObjectsAndComponents;
             this.respectHideInInspector = respectHideInInspector;
@@ -49,6 +50,7 @@ namespace Tweach
 
         Dictionary<Component, ComponentReference> componentReferenceDictionary;
         Dictionary<GameObject, GameObjectReference> gameObjectReferenceDictionary;
+        Dictionary<Type, List<MemberInfo>> memberTypes;
 
         int mappedGameObjectCount;
         int mappedComponentCount;
@@ -158,7 +160,7 @@ namespace Tweach
 
             if (typeof(IList).IsAssignableFrom(parentType))
             {
-                var parentIListValue = (IList) parentValue;
+                var parentIListValue = (IList)parentValue;
 
                 for (int i = 0; i < parentIListValue.Count; i++)
                 {
@@ -169,9 +171,20 @@ namespace Tweach
             }
             else
             {
-                var memberInfos = parentType
-                    .GetMembers(Utilities.GetBindingFlags(mapInstance, mapStatic, mapPublic, mapNonPublic))
-                    .Where(m => EvaluateMemberInfo(m));
+                IEnumerable<MemberInfo> memberInfos;
+                
+                if (!memberTypes.ContainsKey(parentType))
+                {
+                    memberInfos = parentType
+                        .GetMembers(Utilities.GetBindingFlags(mapInstance, mapStatic, mapPublic, mapNonPublic))
+                        .Where(m => EvaluateMemberInfo(m));
+
+                    memberTypes.Add(parentType, memberInfos.ToList());
+                }
+                else
+                {
+                    memberInfos = memberTypes[parentType];
+                }
 
                 foreach (var memberInfo in memberInfos)
                 {

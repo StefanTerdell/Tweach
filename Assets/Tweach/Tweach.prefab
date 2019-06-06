@@ -189,9 +189,10 @@ MonoBehaviour:
   mapNonPublic: 0
   mapStatic: 1
   mapInstance: 1
+  cacheMemberTypes: 1
   hideMemberlessObjectsAndComponents: 1
   maxDepth: 20
-  logMapTime: 0
+  logMapTime: 1
   logMap: 0
   hierarchyContentTransform: {fileID: 5188920084213174885}
   componentsAndFieldsContentTransform: {fileID: 5188920084322951867}
@@ -349,7 +350,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0.000029513058, y: -0.000014747431}
+  m_AnchoredPosition: {x: 0.000010103797, y: -0.000020587097}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &215455537903549063
@@ -825,7 +826,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Asdasdasdasdasdasd
+  m_Text: 
 --- !u!1 &5188920084559238705
 GameObject:
   m_ObjectHideFlags: 0
